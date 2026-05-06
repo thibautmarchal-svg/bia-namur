@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    body {
+        @apply bg-bia-cream text-bia-ink;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-serif text-bia-ink;
+    }
+
+    /* Focus visible ambré pour navigation clavier (accessibilité WCAG) */
+    *:focus-visible {
+        outline: 2px solid #C77F2C;
+        outline-offset: 2px;
+        border-radius: 0.25rem;
+    }
+
+    /* Selection ton Bia */
+    ::selection {
+        background-color: #E5A965;
+        color: #1A1410;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center justify-center rounded-card px-5 py-3 bg-bia-primary text-bia-cream font-medium transition-colors hover:bg-bia-primary-dk focus-visible:outline-bia-primary-dk;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center rounded-card px-5 py-3 text-bia-ink-soft hover:text-bia-ink hover:bg-bia-cream-dk transition-colors;
+    }
+
+    .container-editorial {
+        @apply mx-auto px-6 sm:px-8 max-w-3xl;
+    }
+
+    .prose-bia {
+        @apply max-w-reading text-body text-bia-ink-soft;
+    }
+}

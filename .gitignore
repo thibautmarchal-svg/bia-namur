@@ -40,6 +40,21 @@ desktop.ini
 .phpunit.result.cache
 .phpunit.cache
 
+# Laravel-specific
+.env.backup
+.phpactor.json
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.nova
+/.zed
+/storage/*.key
+/storage/pail
+_tmp_laravel/
+
 # Misc
 *.bak
 *.tmp
