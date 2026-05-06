@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 240" role="img" aria-label="Bia Namur monochrome">
+  <title>Bia Namur — version monochrome</title>
+  <rect x="40" y="40" width="160" height="160" rx="24" fill="#1A1410"/>
+  <text x="120" y="158" text-anchor="middle" font-family="Lora, Georgia, serif" font-size="124" font-weight="500" fill="#F5EDDC">B</text>
+  <circle cx="170" cy="65" r="3.5" fill="#F5EDDC" opacity="0.7"/>
+  <circle cx="180" cy="60" r="3.5" fill="#F5EDDC" opacity="0.85"/>
+  <circle cx="178" cy="73" r="3.5" fill="#F5EDDC"/>
+  <text x="240" y="135" font-family="Lora, Georgia, serif" font-size="64" font-weight="500" fill="#1A1410">Bia</text>
+  <text x="244" y="170" font-family="Inter Tight, Inter, sans-serif" font-size="18" font-weight="500" fill="#1A1410" letter-spacing="8">NAMUR</text>
+  <text x="240" y="200" font-family="Lora, Georgia, serif" font-size="14" font-style="italic" fill="#1A1410">Le carnet vivant des namurois</text>
+</svg>
