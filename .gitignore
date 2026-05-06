@@ -1,12 +1,45 @@
-﻿secrets-bia-namur.md
+﻿# Secrets — JAMAIS commités
+secrets-bia-namur.md
 .env
 .env.local
 .env.staging
 .env.production
+.env.*.local
+
+# Dépendances
 /vendor
 /node_modules
+
+# Logs
 /storage/logs/*
+!/storage/logs/.gitkeep
+*.log
+
+# Cache et builds
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/app/public/*
+/public/build
+/public/hot
+/public/storage
+
+# OS
 .DS_Store
-.idea
-.vscode
 Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Tests
+/coverage
+.phpunit.result.cache
+.phpunit.cache
+
+# Misc
+*.bak
+*.tmp
