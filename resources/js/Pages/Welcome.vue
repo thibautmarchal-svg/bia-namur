@@ -2,10 +2,6 @@
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
-defineProps({
-    laravelVersion: String,
-    phpVersion: String,
-});
 </script>
 
 <template>
@@ -15,9 +11,9 @@ defineProps({
     </Head>
 
     <AppLayout>
-        <section class="container-editorial pt-editorial pb-12">
+        <section class="container-editorial pt-editorial pb-16 sm:pb-20">
             <p class="font-sans text-caption uppercase tracking-[0.2em] text-bia-primary mb-6">
-                Bientôt parmi nous
+                On prépare le premier brief
             </p>
             <h1 class="font-serif text-hero font-medium text-bia-ink mb-6">
                 Le carnet vivant<br>
@@ -78,10 +74,5 @@ defineProps({
             </div>
         </section>
 
-        <section v-if="laravelVersion" class="container-editorial pb-12">
-            <p class="text-xs text-bia-ink-mute font-mono">
-                Socle technique : Laravel {{ laravelVersion }} · PHP {{ phpVersion }} · Inertia + Vue 3 · Tailwind CSS · PWA-ready
-            </p>
-        </section>
     </AppLayout>
 </template>

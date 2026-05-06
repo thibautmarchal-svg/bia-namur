@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Variables sémantiques — palette repensée pour mode sombre, pas inversion */
+:root {
+    --bia-bg: #F5EDDC;       /* cream */
+    --bia-surface: #FFFFFF;
+    --bia-text: #1A1410;     /* ink */
+    --bia-text-muted: #8B7E72;
+    --bia-accent: #C77F2C;
+}
+
+.dark {
+    --bia-bg: #1A1410;       /* ink */
+    --bia-surface: #2A2018;  /* ink légèrement plus clair */
+    --bia-text: #F5EDDC;     /* cream */
+    --bia-text-muted: #8B7E72;
+    --bia-accent: #E5A965;   /* primary-lt, plus visible sur fond sombre */
+}
+
 @layer base {
     html {
         -webkit-font-smoothing: antialiased;

@@ -8,20 +8,16 @@ defineProps({
 
 <template>
     <div class="min-h-screen flex flex-col">
-        <header class="border-b border-bia-cream-dk bg-bia-cream/80 backdrop-blur-sm sticky top-0 z-30">
-            <div class="container-editorial flex items-center justify-between py-4">
+        <header class="border-b border-bia-cream-dk">
+            <div class="container-editorial py-6">
                 <Link
                     href="/"
-                    class="flex items-center gap-2 group"
+                    class="inline-flex items-center gap-3 group"
                     aria-label="Bia Namur — accueil"
                 >
-                    <img src="/logo.svg" alt="" class="h-8 w-8" />
+                    <img src="/logo.svg" alt="" class="h-9 w-9" />
                     <span class="font-serif text-h3 font-medium text-bia-ink">Bia Namur</span>
                 </Link>
-                <nav aria-label="Navigation principale" class="hidden sm:flex items-center gap-1">
-                    <Link href="/" class="btn-ghost text-caption">Accueil</Link>
-                    <span class="text-caption text-bia-ink-mute italic px-3">— Carte, stories à venir —</span>
-                </nav>
             </div>
         </header>
 
