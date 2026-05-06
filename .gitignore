@@ -1,0 +1,12 @@
+﻿secrets-bia-namur.md
+.env
+.env.local
+.env.staging
+.env.production
+/vendor
+/node_modules
+/storage/logs/*
+.DS_Store
+.idea
+.vscode
+Thumbs.db
