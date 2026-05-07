@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\Photo;
+
 /**
  * Resolution de la photo de couverture pour un Place ou une Story.
  *
@@ -23,6 +25,32 @@ class PhotoResolver
     public const TYPE_STORY = 'stories';
 
     public const TYPE_BRIEF = 'briefs';
+
+    /**
+     * Format un Photo BDD (upload reel storage/app/public/uploads/...) en
+     * payload front compatible avec le composant <picture> + <PhotoCredit />.
+     * Utilise par PlaceResource quand le Place a un cover_photo_id renseigne
+     * (cas d'une contribution approuvee qui a ete promue en Place draft).
+     *
+     * @return array{url:string, src_jpg:string, srcset:string, sizes:string, alt:string, credit:?string, license:?string, license_url:?string, source_url:?string, is_override:bool}
+     */
+    public static function fromUploadedPhoto(Photo $photo, ?string $altOverride = null): array
+    {
+        $url = asset('storage/' . $photo->path);
+
+        return [
+            'url' => $url,
+            'src_jpg' => $url,
+            'srcset' => $url,
+            'sizes' => '(min-width: 1024px) 1024px, 100vw',
+            'alt' => $altOverride ?? $photo->credit ?? '',
+            'credit' => $photo->credit,
+            'license' => $photo->license === 'all_rights_reserved' ? null : $photo->license,
+            'license_url' => null,
+            'source_url' => null,
+            'is_override' => true,
+        ];
+    }
 
     /**
      * Retourne le payload photo pour un slug donne.

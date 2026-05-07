@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreContributionRequest;
 use App\Jobs\ModerateContributionJob;
 use App\Models\Contribution;
+use App\Services\Media\PhotoUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -37,7 +38,7 @@ class ContributionController extends Controller
         ]);
     }
 
-    public function store(StoreContributionRequest $request): RedirectResponse
+    public function store(StoreContributionRequest $request, PhotoUploadService $photos): RedirectResponse
     {
         // Rate limit : 3 contributions par IP par 24h (cf. agent security-namur)
         $ipKey = 'contribution-ip:' . sha1($request->ip() ?? 'unknown');
@@ -69,12 +70,31 @@ class ContributionController extends Controller
             'submitted_user_agent' => substr((string) $request->userAgent(), 0, 255),
         ]);
 
+        // Photo upload (optionnel) : strip EXIF + resize + Photo polymorphique
+        if ($request->hasFile('photo')) {
+            try {
+                $photos->storeFor(
+                    file: $request->file('photo'),
+                    uploadable: $contribution,
+                    uploadedBy: $request->user()?->id,
+                    credit: $request->string('contributor_name')->trim()->toString() ?: null,
+                );
+            } catch (\Throwable $e) {
+                Log::channel('moderation')->warning('contribution.photo_upload_failed', [
+                    'contribution_id' => $contribution->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Pas de blocage : la contribution reste utile sans photo
+            }
+        }
+
         RateLimiter::hit($ipKey, 86400);    // 24h
 
         Log::channel('moderation')->info('contribution.submitted', [
             'contribution_id' => $contribution->id,
             'type' => $contribution->type,
             'ip_hash' => sha1($request->ip() ?? 'unknown'),
+            'has_photo' => $request->hasFile('photo'),
         ]);
 
         // Dispatch en async — le moderateur recevra le score Claude sous quelques secondes

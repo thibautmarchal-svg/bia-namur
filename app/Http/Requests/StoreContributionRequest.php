@@ -27,6 +27,10 @@ class StoreContributionRequest extends FormRequest
             // Coordonnees du suggesteur — optionnelles, pour suivi de la decision
             'contributor_email' => ['nullable', 'email:rfc', 'max:255'],
             'contributor_name' => ['nullable', 'string', 'max:80'],
+
+            // Photo optionnelle : 5 MB max, mime image strict (validation
+            // par magic bytes dans PhotoUploadService, pas par header HTTP)
+            'photo' => ['nullable', 'file', 'image', 'max:5120', 'mimetypes:image/jpeg,image/png,image/webp'],
         ];
     }
 
@@ -40,6 +44,9 @@ class StoreContributionRequest extends FormRequest
             'description.required' => 'Une description est obligatoire (au moins 30 caractères).',
             'description.min' => 'La description doit faire au moins 30 caractères.',
             'description.max' => 'La description ne peut pas dépasser 500 caractères.',
+            'photo.image' => 'Le fichier doit être une image (JPG, PNG ou WebP).',
+            'photo.max' => 'La photo ne peut pas dépasser 5 Mo.',
+            'photo.mimetypes' => 'Format photo non supporté. Utilise JPG, PNG ou WebP.',
         ];
     }
 }

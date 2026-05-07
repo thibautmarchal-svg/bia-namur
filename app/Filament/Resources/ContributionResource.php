@@ -5,7 +5,9 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ContributionResource\Pages;
 use App\Models\City;
 use App\Models\Contribution;
+use App\Models\Photo;
 use App\Models\Place;
+use App\Services\Media\PhotoUploadService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Actions\Action;
@@ -13,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class ContributionResource extends Resource
@@ -66,6 +69,25 @@ class ContributionResource extends Resource
                                 Contribution::TYPE_STORY_PROPOSAL => 'Proposition de story',
                             ])
                             ->disabled(),
+                        Forms\Components\Placeholder::make('photo_preview')
+                            ->label('Photo soumise')
+                            ->content(function (?Contribution $record) {
+                                if (! $record) {
+                                    return 'Aucune (création en cours)';
+                                }
+                                $photo = Photo::where('uploadable_type', $record->getMorphClass())
+                                    ->where('uploadable_id', $record->id)
+                                    ->first();
+                                if (! $photo) {
+                                    return new HtmlString('<em style="color:#8B7E72">Aucune photo soumise</em>');
+                                }
+
+                                return new HtmlString(sprintf(
+                                    '<img src="%s" alt="Photo soumise" style="max-width:480px;max-height:320px;border-radius:.75rem;border:1px solid #E8DDC5;" />',
+                                    asset('storage/' . $photo->path),
+                                ));
+                            })
+                            ->columnSpanFull(),
                         Forms\Components\KeyValue::make('payload')
                             ->label('Contenu de la contribution')
                             ->disabled()
@@ -263,6 +285,16 @@ class ContributionResource extends Resource
             'source' => Place::SOURCE_CONTRIBUTION,
             'status' => Place::STATUS_DRAFT,
         ]);
+
+        // Si une photo est attachée à la contribution, on la déménage
+        // vers le Place cree (uploadable_* update) et on la pose en cover
+        $photo = Photo::where('uploadable_type', $contribution->getMorphClass())
+            ->where('uploadable_id', $contribution->id)
+            ->first();
+        if ($photo) {
+            app(PhotoUploadService::class)->reattachTo($photo, $place);
+            $place->update(['cover_photo_id' => $photo->id]);
+        }
 
         $contribution->update([
             'status' => Contribution::STATUS_MERGED,

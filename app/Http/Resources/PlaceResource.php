@@ -25,7 +25,9 @@ class PlaceResource extends JsonResource
             'tags' => $this->tags ?? [],
             'is_sponsored' => (bool) $this->is_sponsored,
             'sponsored_label' => $this->sponsored_label,
-            'cover_photo' => PhotoResolver::for(PhotoResolver::TYPE_PLACE, $this->slug, $this->name),
+            'cover_photo' => $this->resource->coverPhoto
+                ? PhotoResolver::fromUploadedPhoto($this->resource->coverPhoto, $this->name)
+                : PhotoResolver::for(PhotoResolver::TYPE_PLACE, $this->slug, $this->name),
             'source' => $this->source,
             'story' => StoryResource::make($this->whenLoaded('story')),
             'updated_at' => $this->updated_at?->toIso8601String(),
