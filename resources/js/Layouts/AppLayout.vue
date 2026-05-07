@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
         <Transition name="drawer-slide">
             <aside
                 v-if="drawerOpen"
-                class="fixed inset-y-0 right-0 w-[85vw] max-w-sm bg-bia-bg z-50 shadow-2xl flex flex-col lg:hidden"
+                class="fixed inset-y-0 right-0 w-[85vw] max-w-sm bg-white z-50 shadow-2xl flex flex-col lg:hidden"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menu de navigation"
