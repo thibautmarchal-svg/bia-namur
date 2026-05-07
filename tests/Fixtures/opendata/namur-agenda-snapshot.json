@@ -1,0 +1,211 @@
+{
+  "nhits": 12,
+  "parameters": {
+    "dataset": "namur-agenda-des-evenements",
+    "rows": 50,
+    "start": 0,
+    "format": "json"
+  },
+  "records": [
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-001-marche-grognon",
+      "fields": {
+        "titre": "Marché du dimanche au Grognon",
+        "description": "Le marché des producteurs reprend ses rendez-vous hebdomadaires sur la place du Grognon. Maraîchers, fromages, boucher campagnard.",
+        "date_debut": "2026-05-10T08:00:00+02:00",
+        "date_fin": "2026-05-10T13:00:00+02:00",
+        "lieu": "Le Grognon",
+        "adresse": "Place du Grognon, 5000 Namur",
+        "geo_point_2d": [50.4612, 4.8669],
+        "categorie": "Marché",
+        "prix": "Gratuit",
+        "url": "https://www.namur.be/marche-grognon"
+      },
+      "record_timestamp": "2026-04-15T10:00:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-002-vernissage-bomel",
+      "fields": {
+        "titre": "Vernissage : carnets de voyage",
+        "description": "Trois illustratrices namuroises exposent leurs carnets ramenés du Maroc et d'Albanie. Vernissage le vendredi soir, expo jusqu'au 25 mai.",
+        "date_debut": "2026-05-15T18:30:00+02:00",
+        "date_fin": "2026-05-15T21:00:00+02:00",
+        "lieu": "Maison de la Culture Bomel",
+        "adresse": "Traverse des Muses 18, 5000 Namur",
+        "geo_point_2d": [50.4732, 4.8810],
+        "categorie": "Exposition",
+        "prix": "Gratuit",
+        "url": "https://www.maisondelaculture.namur.be"
+      },
+      "record_timestamp": "2026-04-20T14:30:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-003-concert-belvedere",
+      "fields": {
+        "titre": "Concert : Sweet Lord Trio",
+        "description": "Reprises de standards jazz dans la cave voûtée du Belvédère. Acoustique sèche, 80 places.",
+        "date_debut": "2026-05-16T21:00:00+02:00",
+        "date_fin": "2026-05-16T23:30:00+02:00",
+        "lieu": "Le Belvédère",
+        "adresse": "Avenue Reine Astrid 22, 5000 Namur",
+        "geo_point_2d": [50.4628, 4.8635],
+        "categorie": "Concert",
+        "prix": "12 €",
+        "url": "https://www.belvedere-namur.be/sweet-lord-trio"
+      },
+      "record_timestamp": "2026-04-22T09:15:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-004-balade-confluence",
+      "fields": {
+        "titre": "Balade nature : la confluence à pied",
+        "description": "Trois heures avec un guide-naturaliste qui montre les hérons cendrés et la flore des berges.",
+        "date_debut": "2026-05-16T10:00:00+02:00",
+        "date_fin": "2026-05-16T13:00:00+02:00",
+        "lieu": "Pont des Ardennes",
+        "adresse": "Pont des Ardennes, 5000 Namur",
+        "geo_point_2d": [50.4623, 4.8702],
+        "categorie": "Nature",
+        "prix": "Gratuit",
+        "url": ""
+      },
+      "record_timestamp": "2026-04-23T11:00:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-005-conf-saintraint",
+      "fields": {
+        "titre": "Conférence : Saintraint, l'histoire d'une rue",
+        "description": "Un historien namurois retrace 200 ans de la rue Saintraint, depuis l'ancien hôpital jusqu'aux galeries actuelles.",
+        "date_debut": "2026-05-14T19:00:00+02:00",
+        "date_fin": "2026-05-14T20:30:00+02:00",
+        "lieu": "Bibliothèque communale",
+        "adresse": "Place Maurice Servais 1, 5000 Namur",
+        "geo_point_2d": [50.4654, 4.8633],
+        "categorie": "Conférence",
+        "prix": "Gratuit",
+        "url": "https://bibliothequenamur.be/conferences"
+      },
+      "record_timestamp": "2026-04-25T08:00:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-006-asperges-bia",
+      "fields": {
+        "titre": "Dégustation : asperges blanches du moment",
+        "description": "Le menu asperges du Bia Bouquet est un classique du printemps. Cinq plats autour de la blanche du Hainaut.",
+        "date_debut": "2026-05-13T19:30:00+02:00",
+        "date_fin": "2026-05-13T22:30:00+02:00",
+        "lieu": "Le Bia Bouquet",
+        "adresse": "Rue de Bruxelles 70, 5000 Namur",
+        "geo_point_2d": [50.4632, 4.8644],
+        "categorie": "Gastronomie",
+        "prix": "45 €",
+        "url": ""
+      },
+      "record_timestamp": "2026-04-27T16:20:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-007-spectacle-jeunesse",
+      "fields": {
+        "titre": "Spectacle jeunesse : Le voyage de Bia",
+        "description": "Conte musical pour les enfants de 4 à 8 ans. Création originale d'une compagnie namuroise.",
+        "date_debut": "2026-05-12T14:00:00+02:00",
+        "date_fin": "2026-05-12T15:30:00+02:00",
+        "lieu": "Théâtre Royal de Namur",
+        "adresse": "Place du Théâtre 2, 5000 Namur",
+        "geo_point_2d": [50.4641, 4.8651],
+        "categorie": "Famille",
+        "prix": "8 €",
+        "url": "https://www.theatredenamur.be"
+      },
+      "record_timestamp": "2026-04-28T10:30:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-008-apero-saintloup",
+      "fields": {
+        "titre": "Apéro littéraire : Saint-Loup",
+        "description": "Lecture-rencontre avec une auteure belge dans l'écrin baroque de l'église Saint-Loup.",
+        "date_debut": "2026-05-11T18:00:00+02:00",
+        "date_fin": "2026-05-11T20:00:00+02:00",
+        "lieu": "Église Saint-Loup",
+        "adresse": "Rue du Collège 17, 5000 Namur",
+        "geo_point_2d": [50.4647, 4.8631],
+        "categorie": "Culture",
+        "prix": "10 €",
+        "url": ""
+      },
+      "record_timestamp": "2026-04-29T13:45:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-009-marche-grognon-dup",
+      "fields": {
+        "titre": "Marché producteurs Grognon",
+        "description": "Marché hebdomadaire des producteurs locaux sur la place du Grognon.",
+        "date_debut": "2026-05-10T08:00:00+02:00",
+        "date_fin": "2026-05-10T13:00:00+02:00",
+        "lieu": "Grognon",
+        "adresse": "Place du Grognon, Namur",
+        "geo_point_2d": [50.4612, 4.8669],
+        "categorie": "Marché producteurs",
+        "prix": "Gratuit"
+      },
+      "record_timestamp": "2026-04-30T07:00:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-010-balade-citadelle",
+      "fields": {
+        "titre": "Visite guidée des souterrains de la Citadelle",
+        "description": "Découverte des galeries souterraines de la forteresse, accompagné d'un guide-historien.",
+        "date_debut": "2026-05-17T14:00:00+02:00",
+        "date_fin": "2026-05-17T16:00:00+02:00",
+        "lieu": "Citadelle de Namur",
+        "adresse": "Route Merveilleuse 64, 5000 Namur",
+        "geo_point_2d": [50.4615, 4.8635],
+        "categorie": "Patrimoine",
+        "prix": "9 €",
+        "url": "https://citadelle.namur.be"
+      },
+      "record_timestamp": "2026-05-01T09:30:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-011-dj-night",
+      "fields": {
+        "titre": "DJ night : techno house",
+        "description": "Soirée DJ avec deux artistes namurois. Set de 22h à 4h du matin.",
+        "date_debut": "2026-05-15T22:00:00+02:00",
+        "date_fin": "2026-05-16T04:00:00+02:00",
+        "lieu": "Le Cercle",
+        "adresse": "Rue de la Tour 4, 5000 Namur",
+        "categorie": "Musique électronique",
+        "prix": "15 €",
+        "url": ""
+      },
+      "record_timestamp": "2026-05-02T11:00:00.000Z"
+    },
+    {
+      "datasetid": "namur-agenda-des-evenements",
+      "recordid": "fxt-012-no-coords",
+      "fields": {
+        "titre": "Brocante de quartier",
+        "description": "Brocante annuelle organisée par le comité de quartier des Bas-Prés.",
+        "date_debut": "2026-05-18T08:00:00+02:00",
+        "date_fin": "2026-05-18T16:00:00+02:00",
+        "lieu": "Quartier des Bas-Prés",
+        "adresse": "Rue des Bas-Prés, 5000 Namur",
+        "categorie": "Brocante",
+        "prix": "Gratuit"
+      },
+      "record_timestamp": "2026-05-03T08:30:00.000Z"
+    }
+  ]
+}

@@ -8,7 +8,7 @@ const props = defineProps({
     brief: { type: Object, required: true },
 });
 
-const items = props.brief.items?.data ?? props.brief.items ?? [];
+const items = props.brief.items ?? [];
 </script>
 
 <template>

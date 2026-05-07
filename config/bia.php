@@ -24,6 +24,57 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pipelines d'ingestion
+    |--------------------------------------------------------------------------
+    |
+    | fixture_mode : utilise les snapshots locaux dans tests/Fixtures/opendata
+    |                et tests/Fixtures/rss au lieu d'appeler les APIs reelles.
+    |                Active par defaut en local + testing pour ne pas hammer
+    |                les sources externes en dev.
+    | user_agent   : envoye sur tous les appels HTTP sortants (OpenData,
+    |                Nominatim, RSS, scraping). Identifie pour respect
+    |                des conditions des sources et joignabilite admin.
+    | nominatim_rate_limit_ms : delai minimum entre 2 appels Nominatim
+    |                (1 req/s requis par les conditions OSM).
+    */
+
+    'ingestion' => [
+        'fixture_mode' => env('BIA_INGEST_FIXTURE_MODE', true),
+        'user_agent' => env('BIA_USER_AGENT', 'BiaNamurBot/1.0 (+contact@bianamur.be)'),
+        'opendata_namur_url' => env(
+            'BIA_OPENDATA_NAMUR_URL',
+            'https://data.namur.be/api/records/1.0/search/?dataset=namur-agenda-des-evenements&rows=200',
+        ),
+        'nominatim_url' => env('BIA_NOMINATIM_URL', 'https://nominatim.openstreetmap.org/search'),
+        'nominatim_rate_limit_ms' => 1100,
+        'http_timeout_seconds' => 30,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Categorisation auto par mots-cles (sans Claude)
+    |--------------------------------------------------------------------------
+    |
+    | Mapping cles → liste de mots qui declenchent la categorisation.
+    | Premiere correspondance gagne. Si rien ne matche, category=null
+    | et Claude tranche en S2 sur les cas ambigus.
+    */
+
+    'categorization_rules' => [
+        'concert' => ['concert', 'musique', 'live', 'jazz', 'rock', 'classique', 'symphonique'],
+        'electro' => ['dj', 'electro', 'techno', 'house', 'club night'],
+        'expo' => ['expo', 'exposition', 'vernissage', 'galerie'],
+        'theatre' => ['theatre', 'théâtre', 'piece', 'spectacle', 'comedie'],
+        'famille' => ['famille', 'enfants', 'jeunesse', 'kids', 'goûter'],
+        'gastronomie' => ['degustation', 'dégustation', 'menu', 'cuisine', 'gastronomie', 'pèkèt', 'biere', 'asperges'],
+        'patrimoine' => ['patrimoine', 'visite guidée', 'historique', 'souterrains', 'citadelle', 'historien'],
+        'marche' => ['marché', 'marche', 'producteurs', 'brocante'],
+        'nature' => ['balade', 'randonnée', 'nature', 'parc', 'biodiversité'],
+        'culture' => ['conférence', 'lecture', 'rencontre', 'apero littéraire', 'litterature'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Pipelines IA
     |--------------------------------------------------------------------------
     |

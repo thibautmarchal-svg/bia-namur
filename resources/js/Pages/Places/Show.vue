@@ -9,7 +9,7 @@ const props = defineProps({
     place: { type: Object, required: true },
 });
 
-const data = props.place.data ?? props.place;
+const data = props.place;
 const photo = computed(() => data.cover_photo ?? null);
 
 const TYPE_LABELS = {

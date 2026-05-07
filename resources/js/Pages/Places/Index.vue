@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PlaceCard from '@/Components/PlaceCard.vue';
 
 defineProps({
-    places: { type: Object, required: true },
+    places: { type: Array, required: true },
 });
 </script>
 
@@ -28,8 +28,8 @@ defineProps({
         </section>
 
         <section class="container-editorial py-8">
-            <div v-if="places.data?.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <PlaceCard v-for="place in places.data" :key="place.id" :place="place" />
+            <div v-if="places.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <PlaceCard v-for="place in places" :key="place.id" :place="place" />
             </div>
             <p v-else class="font-serif italic text-bia-ink-soft">Aucun lieu publié pour l'instant.</p>
         </section>

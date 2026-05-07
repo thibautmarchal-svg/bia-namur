@@ -73,6 +73,28 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Bia Namur — channels metiers dedies pour faciliter le debug.
+        'ingestion' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/ingestion.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 30,
+        ],
+
+        'ai_pipeline' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/ai-pipeline.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 30,
+        ],
+
+        'moderation' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/moderation.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 30,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

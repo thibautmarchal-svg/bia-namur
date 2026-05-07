@@ -5,13 +5,11 @@ import EditorialHero from '@/Components/EditorialHero.vue';
 import PlaceCard from '@/Components/PlaceCard.vue';
 import BriefList from '@/Components/BriefList.vue';
 
-const props = defineProps({
+defineProps({
     brief: { type: Object, default: null },
     highlightPlaces: { type: Array, default: () => [] },
     latestStories: { type: Array, default: () => [] },
 });
-
-const placesArray = props.highlightPlaces?.data ?? props.highlightPlaces ?? [];
 </script>
 
 <template>
@@ -39,7 +37,7 @@ const placesArray = props.highlightPlaces?.data ?? props.highlightPlaces ?? [];
             </EditorialHero>
 
             <section class="container-editorial py-8 max-w-3xl">
-                <BriefList :items="brief.items?.data ?? brief.items ?? []" />
+                <BriefList :items="brief.items ?? []" />
             </section>
         </template>
 
@@ -62,7 +60,7 @@ const placesArray = props.highlightPlaces?.data ?? props.highlightPlaces ?? [];
         </template>
 
         <!-- Highlights de lieux -->
-        <section v-if="placesArray.length" class="container-editorial py-editorial border-t border-bia-cream-dk">
+        <section v-if="highlightPlaces.length" class="container-editorial py-editorial border-t border-bia-cream-dk">
             <div class="flex items-end justify-between gap-4 mb-8">
                 <div>
                     <p class="font-sans text-caption uppercase tracking-[0.2em] text-bia-primary mb-2">
@@ -77,7 +75,7 @@ const placesArray = props.highlightPlaces?.data ?? props.highlightPlaces ?? [];
                 </Link>
             </div>
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <PlaceCard v-for="place in placesArray" :key="place.id ?? place.slug" :place="place" />
+                <PlaceCard v-for="place in highlightPlaces" :key="place.id ?? place.slug" :place="place" />
             </div>
         </section>
 

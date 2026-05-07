@@ -7,7 +7,7 @@ const props = defineProps({
     story: { type: Object, required: true },
 });
 
-const data = props.story.data ?? props.story;
+const data = props.story;
 </script>
 
 <template>
