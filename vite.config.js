@@ -70,7 +70,26 @@ export default defineConfig({
             workbox: {
                 navigateFallbackDenylist: [/^\/admin/, /^\/api/, /^\/build/],
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+                // Le chunk Map (Maplibre + deps, ~1 MB) ne sert que sur /carte.
+                // Pas de precache — runtime caching plus bas s'en charge a la
+                // 1re visite de /carte uniquement. Gain : -1 MB sur le first paint
+                // pour les visiteurs qui n'ouvrent pas la carte.
+                globIgnores: ['**/Map-*.js', '**/Map-*.css'],
+                maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
                 runtimeCaching: [
+                    {
+                        // Map chunk : cache des qu'il est telecharge (lors de la 1re
+                        // visite de /carte), puis StaleWhileRevalidate pour les MAJ.
+                        urlPattern: ({ url }) => /\/build\/assets\/Map-/.test(url.pathname),
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'bia-map-chunk',
+                            expiration: {
+                                maxEntries: 4,
+                                maxAgeSeconds: 60 * 60 * 24 * 30,
+                            },
+                        },
+                    },
                     {
                         urlPattern: /\/briefs\//,
                         handler: 'NetworkFirst',
