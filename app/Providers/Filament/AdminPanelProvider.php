@@ -6,6 +6,8 @@ use App\Filament\Widgets\AiCostsWidget;
 use App\Filament\Widgets\IngestionHealthWidget;
 use App\Filament\Widgets\LatestBriefsWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
+use App\Filament\Widgets\TopPlacesWidget;
+use App\Filament\Widgets\TopStoriesWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -59,6 +61,8 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 StatsOverviewWidget::class,
+                TopPlacesWidget::class,
+                TopStoriesWidget::class,
                 AiCostsWidget::class,
                 IngestionHealthWidget::class,
                 LatestBriefsWidget::class,

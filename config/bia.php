@@ -302,6 +302,24 @@ PROMPT,
 
     /*
     |--------------------------------------------------------------------------
+    | Analytics
+    |--------------------------------------------------------------------------
+    |
+    | cloudflare_beacon_token : token Cloudflare Web Analytics. A definir en
+    |   prod uniquement. Si vide → script non injecte (zero tracking par defaut
+    |   en local et en staging).
+    | bot_dedup_window_hours : fenetre de dedup pour le tracking interne
+    |   (RecordPageView). Un meme hash IP qui revoit la meme page dans
+    |   cette fenetre n'incremente pas le compteur.
+    */
+
+    'analytics' => [
+        'cloudflare_beacon_token' => env('BIA_CLOUDFLARE_BEACON_TOKEN'),
+        'bot_dedup_window_hours' => 24,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Wallon namurois — vocabulaire de base (cf. brief annexe C)
     |--------------------------------------------------------------------------
     */

@@ -11,18 +11,23 @@ use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
+use App\Http\Middleware\RecordPageView;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Pages publiques editoriales
 Route::get('/', HomeController::class)->name('home');
 Route::get('/briefs', [BriefController::class, 'index'])->name('briefs.index');
-Route::get('/brief/{slug}', [BriefController::class, 'show'])->name('briefs.show');
 Route::get('/lieux', [PlaceController::class, 'index'])->name('places.index');
-Route::get('/lieu/{slug}', [PlaceController::class, 'show'])->name('places.show');
 Route::get('/stories', [StoryController::class, 'index'])->name('stories.index');
-Route::get('/story/{slug}', [StoryController::class, 'show'])->name('stories.show');
 Route::get('/carte', MapController::class)->name('map');
+
+// Pages show : tracking interne via RecordPageView (anonymise + dedup 24h)
+Route::middleware(RecordPageView::class)->group(function () {
+    Route::get('/brief/{slug}', [BriefController::class, 'show'])->name('briefs.show');
+    Route::get('/lieu/{slug}', [PlaceController::class, 'show'])->name('places.show');
+    Route::get('/story/{slug}', [StoryController::class, 'show'])->name('stories.show');
+});
 Route::get('/recherche', SearchController::class)->name('search');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 

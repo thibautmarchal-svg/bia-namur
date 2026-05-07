@@ -27,5 +27,14 @@
 </head>
 <body class="h-full bg-bia-cream text-bia-ink font-sans antialiased">
     @inertia
+
+    {{-- Cloudflare Web Analytics : cookieless, RGPD-friendly. Active uniquement
+         si BIA_CLOUDFLARE_BEACON_TOKEN est defini en prod. --}}
+    @if (app()->environment('production') && config('bia.analytics.cloudflare_beacon_token'))
+        <script defer
+                src="https://static.cloudflareinsights.com/beacon.min.js"
+                data-cf-beacon='{"token": "{{ config('bia.analytics.cloudflare_beacon_token') }}"}'>
+        </script>
+    @endif
 </body>
 </html>
