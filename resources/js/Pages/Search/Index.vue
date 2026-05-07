@@ -98,12 +98,26 @@ const hasQuery = () => props.query.length >= props.minLength;
                 <ul class="divide-y divide-bia-cream-dk border-y border-bia-cream-dk">
                     <li v-for="story in results.stories" :key="story.id">
                         <Link :href="`/story/${story.slug}`" class="flex items-start gap-4 py-5 hover:bg-bia-cream-dk/40 transition-colors px-2 -mx-2 rounded-card">
-                            <img
-                                :src="story.cover_photo.src"
-                                :alt="story.cover_photo.alt"
-                                class="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-card flex-shrink-0"
-                                loading="lazy"
-                            />
+                            <picture v-if="story.cover_photo" class="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0">
+                                <source
+                                    v-if="story.cover_photo.srcset && story.cover_photo.srcset.includes('.webp')"
+                                    :srcset="story.cover_photo.srcset"
+                                    type="image/webp"
+                                />
+                                <img
+                                    :src="story.cover_photo.src_jpg || story.cover_photo.url"
+                                    :alt="story.cover_photo.alt || story.title"
+                                    class="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-card"
+                                    loading="lazy"
+                                />
+                            </picture>
+                            <div
+                                v-else
+                                class="w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center bg-bia-cream-dk rounded-card font-serif italic text-bia-ink-mute flex-shrink-0"
+                                aria-hidden="true"
+                            >
+                                Bia
+                            </div>
                             <div class="min-w-0 flex-1">
                                 <p class="font-sans text-caption uppercase tracking-[0.2em] text-bia-primary mb-1">
                                     {{ story.type }}
