@@ -2,6 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\AiCostsWidget;
+use App\Filament\Widgets\IngestionHealthWidget;
+use App\Filament\Widgets\LatestBriefsWidget;
+use App\Filament\Widgets\StatsOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -54,6 +58,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                StatsOverviewWidget::class,
+                AiCostsWidget::class,
+                IngestionHealthWidget::class,
+                LatestBriefsWidget::class,
             ])
             ->navigationGroups([
                 NavigationGroup::make()->label('Contenu éditorial'),

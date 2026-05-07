@@ -383,17 +383,19 @@ const totalCount = computed(() => props.places.length);
     border-color: theme('colors.bia.primary');
     color: theme('colors.bia.primary-dk');
 }
-.map-chip--active {
+.map-chip--ghost {
+    background: transparent;
+}
+.map-chip--active,
+.map-chip--ghost.map-chip--active {
     background: theme('colors.bia.primary');
     color: theme('colors.bia.cream');
     border-color: theme('colors.bia.primary');
 }
-.map-chip--active:hover {
+.map-chip--active:hover,
+.map-chip--ghost.map-chip--active:hover {
     background: theme('colors.bia.primary-dk');
     color: theme('colors.bia.cream');
-}
-.map-chip--ghost {
-    background: transparent;
 }
 .map-chip--accent {
     background: theme('colors.bia.cream-dk');
