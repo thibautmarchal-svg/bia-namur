@@ -1,0 +1,5 @@
+À deux pas de la place Saint-Aubain, la rue Saintraint a longtemps porté un nom plus austère : *rue de l'Hôpital*. Au XVIIIe siècle, l'institution hospitalière qui s'y dressait soignait les indigents et accueillait les pèlerins de passage entre Liège et Charleroi. Quand l'hôpital ferma ses portes en 1854, on voulut effacer le souvenir trop sobre de la misère soignée et on rebaptisa la voie du nom du chanoine Joseph Saintraint, érudit local et bienfaiteur du quartier.
+
+Aujourd'hui, la rue est l'une des artères piétonnes les plus animées du centre — librairies indépendantes, anciennes pharmacies converties en bistrots, façades en briques rouges et pierre bleue qu'un œil attentif sait dater au quartier. Le numéro 17 cache encore une porte cochère du XVIIe siècle, classée mais peu visible si on ne lève pas la tête.
+
+Pour les Namurois, *Saintraint* reste avant tout une géographie du quotidien : la papeterie où on a acheté ses cahiers d'école, le glacier où l'on emmène les petits-enfants, la galerie du carillon qu'on traverse pour rejoindre le marché du samedi. À l'aise. Une rue qui ne fait pas son intéressante, mais qui a tout vu passer.

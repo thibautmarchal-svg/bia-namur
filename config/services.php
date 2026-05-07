@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'default_model' => env('CLAUDE_DEFAULT_MODEL', 'claude-sonnet-4-6'),
+        'premium_model' => env('CLAUDE_PREMIUM_MODEL', 'claude-opus-4-7'),
+    ],
+
 ];

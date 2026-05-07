@@ -1,0 +1,10 @@
+{
+  "score": 78,
+  "verdict": "approve",
+  "reasoning": {
+    "quality": "Description claire, ton namurois cohérent, mention du quartier et des horaires d'ouverture.",
+    "tone": "Respect du registre Bia : pas de superlatifs vides, pas d'emoji, voix de voisin érudit.",
+    "factual": "Adresse vérifiable, pas de date inventée, infos pratiques cohérentes.",
+    "duplicate": "Non. Pas de fiche existante pour cette adresse selon la base actuelle."
+  }
+}

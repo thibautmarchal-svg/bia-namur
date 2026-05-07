@@ -1,0 +1,54 @@
+{
+  "intro": "Première vraie semaine de mai à Namur, le confluent reprend des couleurs et les terrasses du quai retrouvent leurs habitués. On a six rendez-vous pour cette semaine, du gratuit en pleine nature au concert dans une cave gothique.",
+  "items": [
+    {
+      "event_id": 1,
+      "title": "Marché du dimanche au Grognon",
+      "venue": "Le Grognon",
+      "when_text": "dimanche 8h-13h",
+      "angle": "Le marché des producteurs reprend ses rendez-vous hebdo après l'hiver. Frais, court, et la place prend les premiers rayons du matin sur le confluent.",
+      "reasoning": "Ancrage 100% local + saisonnier + accessible (gratuit) — diversifie la programmation hors culture."
+    },
+    {
+      "event_id": 2,
+      "title": "Vernissage : carnets de voyage",
+      "venue": "Maison de la Culture Bomel",
+      "when_text": "vendredi 18h30",
+      "angle": "Trois illustratrices namuroises exposent leurs carnets ramenés du Maroc et d'Albanie. Les vernissages MCN sont rarement bondés, on y discute facilement avec les artistes.",
+      "reasoning": "Rareté (3 jours seulement), ancré namurois, accessible (gratuit), diversifie avec une expo."
+    },
+    {
+      "event_id": 3,
+      "title": "Concert : Sweet Lord Trio",
+      "venue": "Le Belvédère",
+      "when_text": "samedi 21h",
+      "angle": "Reprises de standards jazz dans la cave voûtée du Belvédère. Acoustique sèche, pas plus de 80 places, on est près des musiciens.",
+      "reasoning": "Lieu emblématique namurois + rareté (configuration cave), prix intermédiaire."
+    },
+    {
+      "event_id": 4,
+      "title": "Balade nature : la confluence à pied",
+      "venue": "Départ Pont des Ardennes",
+      "when_text": "samedi 10h",
+      "angle": "Trois heures avec un guide-naturaliste qui montre les hérons cendrés et la flore des berges. À l'aise pour les enfants à partir de 8 ans.",
+      "reasoning": "Famille + nature + gratuit — équilibre la sélection avec une activité douce."
+    },
+    {
+      "event_id": 5,
+      "title": "Conférence : Saintraint, l'histoire d'une rue",
+      "venue": "Bibliothèque communale",
+      "when_text": "jeudi 19h",
+      "angle": "Un historien namurois retrace 200 ans de la rue Saintraint, depuis l'ancien hôpital jusqu'aux galeries actuelles. Des photos d'archives projetées.",
+      "reasoning": "Patrimoine + ancrage hyperlocal, parfait pour les anciens et les néo-namurois curieux."
+    },
+    {
+      "event_id": 6,
+      "title": "Dégustation : asperges blanches du moment",
+      "venue": "Le Bia Bouquet",
+      "when_text": "mercredi soir, sur réservation",
+      "angle": "Le menu asperges du Bia est un classique du printemps. Cinq plats autour de la blanche du Hainaut, prix maitrisé pour la qualité.",
+      "reasoning": "Saisonnier + tradition wallonne + restaurant namurois historique."
+    }
+  ],
+  "outro": "Bia bouquet de semaine, à l'aise."
+}
