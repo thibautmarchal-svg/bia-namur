@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\BriefResource;
-use App\Models\Brief;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -14,11 +13,11 @@ class LatestBriefsWidget extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
+    protected static ?string $heading = 'Derniers briefs hebdo';
+
     public function table(Table $table): Table
     {
         return $table
-            ->heading('Derniers briefs hebdo')
-            ->description('Les 5 plus récents briefs générés ou publiés.')
             ->query(
                 BriefResource::getEloquentQuery()
                     ->orderByDesc('year')
@@ -36,32 +35,16 @@ class LatestBriefsWidget extends BaseWidget
                     ->label('Items')
                     ->counts('items')
                     ->badge()
-                    ->color(fn (?int $s) => match (true) {
-                        $s === null || $s < 5 => 'warning',
-                        $s >= 5 && $s <= 7 => 'success',
-                        default => 'danger',
-                    }),
+                    ->color('primary'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        Brief::STATUS_PUBLISHED => 'success',
-                        Brief::STATUS_PENDING_REVIEW => 'warning',
-                        Brief::STATUS_DRAFT_AI => 'info',
-                        Brief::STATUS_ARCHIVED => 'gray',
-                        default => 'gray',
-                    }),
+                    ->color('info'),
                 Tables\Columns\TextColumn::make('generated_at')
                     ->label('Généré')
                     ->dateTime('d/m/Y H:i')
                     ->since(),
             ])
-            ->paginated(false)
-            ->actions([
-                Tables\Actions\Action::make('open')
-                    ->label('Ouvrir')
-                    ->icon('heroicon-m-arrow-right')
-                    ->url(fn (Brief $record) => BriefResource::getUrl('edit', ['record' => $record])),
-            ]);
+            ->paginated(false);
     }
 }
