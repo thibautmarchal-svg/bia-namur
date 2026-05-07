@@ -27,6 +27,7 @@ class IngestionHealthWidget extends BaseWidget
                     ->selectRaw('MAX(ingested_at) as last_ingested')
                     ->groupBy('source'),
             )
+            ->defaultSort('source', 'asc')
             ->columns([
                 Tables\Columns\TextColumn::make('source')
                     ->label('Source')
