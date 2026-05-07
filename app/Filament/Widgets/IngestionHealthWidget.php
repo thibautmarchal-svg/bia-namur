@@ -35,12 +35,12 @@ class IngestionHealthWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('count_normalized')
                     ->label('Normalisés')
                     ->badge()
-                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray'),
+                    ->color('success'),
 
                 Tables\Columns\TextColumn::make('count_ingested')
                     ->label('À normaliser')
                     ->badge()
-                    ->color(fn ($state) => $state > 0 ? 'warning' : 'gray'),
+                    ->color('warning'),
 
                 Tables\Columns\TextColumn::make('count_dropped')
                     ->label('Doublons')
