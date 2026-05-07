@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             EntitlementSeeder::class,
             AdminUserSeeder::class,
+            PlaceSeeder::class,
+            StorySeeder::class,
         ]);
     }
 }

@@ -9,48 +9,77 @@ defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? null);
 
+const navLinks = [
+    { href: '/', label: 'Brief' },
+    { href: '/lieux', label: 'Lieux' },
+    { href: '/stories', label: 'Stories' },
+    { href: '/carte', label: 'Carte' },
+];
+
+const isCurrent = (href) => {
+    const path = page.url.split('?')[0].replace(/\/$/, '') || '/';
+    if (href === '/') return path === '/' || path.startsWith('/brief');
+    return path === href || path.startsWith(href.replace(/s$/, ''));
+};
+
 const logout = () => router.post('/logout');
 </script>
 
 <template>
     <div class="min-h-screen flex flex-col">
         <header class="border-b border-bia-cream-dk">
-            <div class="container-editorial py-6 flex items-center justify-between gap-4">
+            <div class="container-editorial py-5 sm:py-6 flex items-center justify-between gap-4">
                 <Link
                     href="/"
-                    class="inline-flex items-center gap-3 group"
+                    class="inline-flex items-center gap-3 group shrink-0"
                     aria-label="Bia Namur — accueil"
                 >
                     <img src="/logo.svg" alt="" class="h-9 w-9" />
-                    <span class="font-serif text-h3 font-medium text-bia-ink">Bia Namur</span>
+                    <span class="font-serif text-h3 font-medium text-bia-ink hidden sm:inline">Bia Namur</span>
                 </Link>
 
-                <nav v-if="user" class="flex items-center gap-3 text-caption">
-                    <a
-                        v-if="user.is_admin"
-                        href="/admin"
-                        class="text-bia-ink-soft hover:text-bia-primary transition-colors"
+                <nav class="flex items-center gap-1 sm:gap-2" aria-label="Navigation principale">
+                    <Link
+                        v-for="link in navLinks"
+                        :key="link.href"
+                        :href="link.href"
+                        :class="[
+                            'px-2 sm:px-3 py-2 text-caption transition-colors rounded-card',
+                            isCurrent(link.href)
+                                ? 'text-bia-primary font-medium'
+                                : 'text-bia-ink-soft hover:text-bia-primary',
+                        ]"
                     >
-                        Admin
-                    </a>
-                    <span class="text-bia-ink-mute hidden sm:inline">·</span>
-                    <span class="text-bia-ink-soft hidden sm:inline">{{ user.name }}</span>
-                    <button
-                        type="button"
-                        @click="logout"
-                        class="text-bia-ink-soft hover:text-bia-primary transition-colors underline-offset-4 hover:underline"
-                    >
-                        Se déconnecter
-                    </button>
+                        {{ link.label }}
+                    </Link>
                 </nav>
 
-                <Link
-                    v-else
-                    href="/login"
-                    class="text-caption text-bia-ink-soft hover:text-bia-primary transition-colors"
-                >
-                    Se connecter
-                </Link>
+                <div class="flex items-center gap-3 text-caption shrink-0">
+                    <template v-if="user">
+                        <a
+                            v-if="user.is_admin"
+                            href="/admin"
+                            class="hidden sm:inline text-bia-ink-soft hover:text-bia-primary transition-colors"
+                        >
+                            Admin
+                        </a>
+                        <button
+                            type="button"
+                            @click="logout"
+                            class="text-bia-ink-soft hover:text-bia-primary transition-colors"
+                            :title="user.name"
+                        >
+                            Déconnexion
+                        </button>
+                    </template>
+                    <Link
+                        v-else
+                        href="/login"
+                        class="text-bia-ink-soft hover:text-bia-primary transition-colors"
+                    >
+                        Connexion
+                    </Link>
+                </div>
             </div>
         </header>
 
