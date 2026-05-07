@@ -32,6 +32,11 @@ Route::get('/contribuer/merci', [ContributionController::class, 'thanks'])->name
 Route::get('/wallon', [PageController::class, 'wallon'])->name('wallon');
 Route::get('/a-propos', [PageController::class, 'about'])->name('about');
 
+// Pages légales
+Route::get('/mentions-legales', [PageController::class, 'legalMentions'])->name('legal.mentions');
+Route::get('/cgu', [PageController::class, 'legalTerms'])->name('legal.terms');
+Route::get('/confidentialite', [PageController::class, 'legalPrivacy'])->name('legal.privacy');
+
 // Auth magic link
 Route::middleware('guest')->group(function () {
     Route::get('/login', [MagicLinkController::class, 'showLogin'])->name('login');
