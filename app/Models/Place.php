@@ -81,6 +81,11 @@ class Place extends Model
         return $this->hasMany(Event::class);
     }
 
+    public function favorites(): MorphMany
+    {
+        return $this->morphMany(Favorite::class, 'favoritable');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

@@ -94,4 +94,16 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Photo::class, 'uploaded_by');
     }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function favoritesLimit(): int
+    {
+        return $this->hasActiveSubscription()
+            ? (int) config('bia.favorites.plus_limit', 200)
+            : (int) config('bia.favorites.free_limit', 20);
+    }
 }

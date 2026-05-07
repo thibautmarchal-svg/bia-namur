@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Place;
+use App\Models\Story;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -47,8 +49,36 @@ class HandleInertiaRequests extends Middleware
                         'is_admin' => $request->user()->isAdmin(),
                     ]
                     : null,
+                'favorites' => fn () => $request->user()
+                    ? $this->favoriteIds($request->user())
+                    : ['places' => [], 'stories' => []],
             ],
             'flash' => fn () => $request->session()->get('flash'),
+        ];
+    }
+
+    /**
+     * Liste des IDs favoris de l'utilisateur courant, groupes par type.
+     * Permet au frontend (FavoriteButton) de savoir si le coeur est plein
+     * sans une requête supplementaire par card.
+     */
+    private function favoriteIds($user): array
+    {
+        $rows = $user->favorites()
+            ->select('favoritable_type', 'favoritable_id')
+            ->get();
+
+        return [
+            'places' => $rows
+                ->where('favoritable_type', Place::class)
+                ->pluck('favoritable_id')
+                ->values()
+                ->all(),
+            'stories' => $rows
+                ->where('favoritable_type', Story::class)
+                ->pluck('favoritable_id')
+                ->values()
+                ->all(),
         ];
     }
 }

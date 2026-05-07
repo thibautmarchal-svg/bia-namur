@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import PhotoCredit from '@/Components/PhotoCredit.vue';
+import FavoriteButton from '@/Components/FavoriteButton.vue';
 
 const props = defineProps({
     story: { type: Object, required: true },
@@ -69,9 +70,12 @@ const renderedHtml = computed(() => {
                     <span class="text-bia-ink-mute font-normal">· {{ story.reading_minutes }} min de lecture</span>
                 </template>
             </p>
-            <h1 class="font-serif text-hero font-medium text-bia-ink leading-tight mb-6">
-                {{ story.title }}
-            </h1>
+            <div class="flex items-start gap-4 mb-6">
+                <h1 class="font-serif text-hero font-medium text-bia-ink leading-tight flex-1">
+                    {{ story.title }}
+                </h1>
+                <FavoriteButton :type="'story'" :id="story.id" variant="pill" class="mt-2 shrink-0" />
+            </div>
             <p v-if="story.excerpt" class="font-serif text-h3 text-bia-ink-soft italic leading-snug">
                 {{ story.excerpt }}
             </p>

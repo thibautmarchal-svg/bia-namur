@@ -74,6 +74,11 @@ class Story extends Model
         return $this->morphMany(Photo::class, 'uploadable');
     }
 
+    public function favorites(): MorphMany
+    {
+        return $this->morphMany(Favorite::class, 'favoritable');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

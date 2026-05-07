@@ -4,6 +4,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataAttribution from '@/Components/DataAttribution.vue';
 import PhotoCredit from '@/Components/PhotoCredit.vue';
+import FavoriteButton from '@/Components/FavoriteButton.vue';
 
 const props = defineProps({
     place: { type: Object, required: true },
@@ -77,9 +78,12 @@ const contact = computed(() =>
                     · {{ data.neighborhood }}
                 </template>
             </p>
-            <h1 class="font-serif text-hero font-medium text-bia-ink leading-tight mb-6">
-                {{ data.name }}
-            </h1>
+            <div class="flex items-start gap-4 mb-6">
+                <h1 class="font-serif text-hero font-medium text-bia-ink leading-tight flex-1">
+                    {{ data.name }}
+                </h1>
+                <FavoriteButton :type="'place'" :id="data.id" variant="pill" class="mt-2 shrink-0" />
+            </div>
             <p v-if="data.description" class="font-serif text-h3 text-bia-ink-soft italic leading-snug max-w-reading">
                 {{ data.description }}
             </p>

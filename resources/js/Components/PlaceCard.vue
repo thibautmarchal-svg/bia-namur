@@ -1,6 +1,7 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import FavoriteButton from '@/Components/FavoriteButton.vue';
 
 const props = defineProps({
     place: { type: Object, required: true },
@@ -28,7 +29,12 @@ const photo = computed(() => props.place.cover_photo ?? null);
 </script>
 
 <template>
-    <article class="group">
+    <article class="group relative">
+        <FavoriteButton
+            :type="'place'"
+            :id="place.id"
+            class="absolute top-3 right-3 z-10"
+        />
         <Link
             :href="linkHref"
             class="block rounded-card overflow-hidden bg-white border border-bia-cream-dk shadow-editorial hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"

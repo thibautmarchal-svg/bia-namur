@@ -287,6 +287,21 @@ PROMPT,
 
     /*
     |--------------------------------------------------------------------------
+    | Favoris utilisateur
+    |--------------------------------------------------------------------------
+    |
+    | Limite differenciee free / plus. Au-delà du seuil free, on bloque
+    | l'ajout cote backend et on affiche un message orientant vers Bia +
+    | (qui sera lance plus tard, cf. brief §8 modele economique).
+    */
+
+    'favorites' => [
+        'free_limit' => 20,
+        'plus_limit' => 200,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Wallon namurois — vocabulaire de base (cf. brief annexe C)
     |--------------------------------------------------------------------------
     */

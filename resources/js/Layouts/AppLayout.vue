@@ -70,6 +70,16 @@ const logout = () => router.post('/logout');
                     </Link>
                     <ThemeToggle />
                     <template v-if="user">
+                        <Link
+                            href="/mes-favoris"
+                            class="inline-flex items-center justify-center rounded-pill p-2 text-bia-ink-soft hover:text-bia-primary hover:bg-bia-cream-dk transition-colors"
+                            aria-label="Mes favoris"
+                            title="Mes favoris"
+                        >
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 21s-7.5-4.7-9.6-9.3C1 8.4 3 5 6.4 5c2 0 3.6 1.1 4.6 2.6C12 6.1 13.6 5 15.6 5 19 5 21 8.4 19.6 11.7 17.5 16.3 12 21 12 21z"/>
+                            </svg>
+                        </Link>
                         <a
                             v-if="user.is_admin"
                             href="/admin"

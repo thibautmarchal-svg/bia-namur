@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\BriefController;
 use App\Http\Controllers\ContributionController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PageController;
@@ -54,6 +55,14 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [MagicLinkController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
+
+// Favoris (auth requise)
+Route::middleware('auth')->group(function () {
+    Route::get('/mes-favoris', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/favoris/toggle', [FavoriteController::class, 'toggle'])
+        ->middleware('throttle:60,1')
+        ->name('favorites.toggle');
+});
 
 // Page de demo composants UI — uniquement en environnement local
 if (app()->environment('local')) {
