@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\StoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,6 +21,7 @@ Route::get('/lieu/{slug}', [PlaceController::class, 'show'])->name('places.show'
 Route::get('/stories', [StoryController::class, 'index'])->name('stories.index');
 Route::get('/story/{slug}', [StoryController::class, 'show'])->name('stories.show');
 Route::get('/carte', MapController::class)->name('map');
+Route::get('/recherche', SearchController::class)->name('search');
 
 // Contribution publique : form + submit + page de remerciement
 Route::get('/contribuer', [ContributionController::class, 'form'])->name('contribute.form');

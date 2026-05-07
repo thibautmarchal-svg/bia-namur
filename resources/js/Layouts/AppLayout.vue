@@ -57,6 +57,17 @@ const logout = () => router.post('/logout');
                 </nav>
 
                 <div class="flex items-center gap-2 sm:gap-3 text-caption shrink-0">
+                    <Link
+                        href="/recherche"
+                        class="inline-flex items-center justify-center rounded-pill p-2 text-bia-ink-soft hover:text-bia-primary hover:bg-bia-cream-dk transition-colors"
+                        aria-label="Rechercher"
+                        title="Rechercher"
+                    >
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                    </Link>
                     <ThemeToggle />
                     <template v-if="user">
                         <a
