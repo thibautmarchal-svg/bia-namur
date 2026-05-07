@@ -5,6 +5,7 @@ use App\Http\Controllers\BriefController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\StoryController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,10 @@ Route::post('/contribuer', [ContributionController::class, 'store'])
     ->middleware('throttle:6,60')
     ->name('contribute.store');
 Route::get('/contribuer/merci', [ContributionController::class, 'thanks'])->name('contribute.thanks');
+
+// Pages éditoriales statiques
+Route::get('/wallon', [PageController::class, 'wallon'])->name('wallon');
+Route::get('/a-propos', [PageController::class, 'about'])->name('about');
 
 // Auth magic link
 Route::middleware('guest')->group(function () {

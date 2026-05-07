@@ -89,13 +89,18 @@ const logout = () => router.post('/logout');
         </main>
 
         <footer class="border-t border-bia-cream-dk bg-bia-cream-dk/40 mt-editorial">
-            <div class="container-editorial py-10 space-y-4 text-caption text-bia-ink-mute">
+            <div class="container-editorial py-10 space-y-5 text-caption text-bia-ink-mute">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <p class="font-serif italic text-bia-ink-soft">
                         Le carnet vivant des namurois.
                     </p>
                     <p>© {{ new Date().getFullYear() }} Bia Namur</p>
                 </div>
+                <nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label="Liens éditoriaux">
+                    <Link href="/a-propos" class="hover:text-bia-primary transition-colors">À propos</Link>
+                    <Link href="/wallon" class="hover:text-bia-primary transition-colors">Wallon namurois</Link>
+                    <Link href="/contribuer" class="hover:text-bia-primary transition-colors">Contribuer un lieu</Link>
+                </nav>
                 <p class="text-xs leading-relaxed">
                     Données issues de la plateforme OpenData de la Ville de Namur
                     (<a href="https://data.namur.be" class="underline hover:text-bia-primary" rel="noopener noreferrer" target="_blank">data.namur.be</a>),
