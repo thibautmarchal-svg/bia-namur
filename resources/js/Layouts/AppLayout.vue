@@ -14,6 +14,7 @@ const navLinks = [
     { href: '/lieux', label: 'Lieux' },
     { href: '/stories', label: 'Stories' },
     { href: '/carte', label: 'Carte' },
+    { href: '/contribuer', label: 'Contribuer' },
 ];
 
 const isCurrent = (href) => {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\BriefController;
+use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PlaceController;
@@ -18,6 +19,13 @@ Route::get('/lieu/{slug}', [PlaceController::class, 'show'])->name('places.show'
 Route::get('/stories', [StoryController::class, 'index'])->name('stories.index');
 Route::get('/story/{slug}', [StoryController::class, 'show'])->name('stories.show');
 Route::get('/carte', MapController::class)->name('map');
+
+// Contribution publique : form + submit + page de remerciement
+Route::get('/contribuer', [ContributionController::class, 'form'])->name('contribute.form');
+Route::post('/contribuer', [ContributionController::class, 'store'])
+    ->middleware('throttle:6,60')
+    ->name('contribute.store');
+Route::get('/contribuer/merci', [ContributionController::class, 'thanks'])->name('contribute.thanks');
 
 // Auth magic link
 Route::middleware('guest')->group(function () {

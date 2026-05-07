@@ -3,12 +3,17 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContributionResource\Pages;
+use App\Models\City;
 use App\Models\Contribution;
+use App\Models\Place;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class ContributionResource extends Resource
 {
@@ -174,8 +179,108 @@ class ContributionResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                    ->label('Approuver')
+                    ->icon('heroicon-m-check-circle')
+                    ->color('success')
+                    ->visible(fn (Contribution $record) => in_array(
+                        $record->status,
+                        [Contribution::STATUS_PENDING, Contribution::STATUS_MANUAL_REVIEW, Contribution::STATUS_AUTO_APPROVED],
+                        true,
+                    ))
+                    ->requiresConfirmation()
+                    ->modalHeading('Approuver cette contribution ?')
+                    ->modalDescription('Crée une fiche lieu en brouillon depuis le payload. Tu pourras la peaufiner avant publication.')
+                    ->modalSubmitActionLabel('Créer le lieu en brouillon')
+                    ->action(function (Contribution $record): void {
+                        self::approveAndCreatePlace($record);
+                    }),
+
+                Tables\Actions\Action::make('reject')
+                    ->label('Rejeter')
+                    ->icon('heroicon-m-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Contribution $record) => $record->status !== Contribution::STATUS_REJECTED
+                        && $record->status !== Contribution::STATUS_MERGED)
+                    ->form([
+                        Forms\Components\Textarea::make('reviewer_notes')
+                            ->label('Note (optionnelle, visible en interne)')
+                            ->rows(3),
+                    ])
+                    ->action(function (Contribution $record, array $data): void {
+                        $record->update([
+                            'status' => Contribution::STATUS_REJECTED,
+                            'reviewer_notes' => $data['reviewer_notes'] ?? null,
+                            'reviewer_id' => auth()->id(),
+                            'reviewed_at' => now(),
+                        ]);
+                        Notification::make()
+                            ->title('Contribution rejetée')
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\EditAction::make()
+                    ->label('Détails'),
             ]);
+    }
+
+    /**
+     * Convertit une contribution approuvee en Place draft, lie les deux,
+     * marque la contribution comme 'merged'.
+     */
+    protected static function approveAndCreatePlace(Contribution $contribution): void
+    {
+        $payload = $contribution->payload ?? [];
+
+        $namur = City::where('slug', 'namur')->first();
+        if (! $namur) {
+            Notification::make()
+                ->title('Ville Namur introuvable')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $name = $payload['name'] ?? 'Lieu sans nom';
+        $baseSlug = Str::slug($name);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Place::where('city_id', $namur->id)->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . (++$i);
+        }
+
+        $place = Place::create([
+            'city_id' => $namur->id,
+            'slug' => $slug,
+            'name' => $name,
+            'type' => $payload['type'] ?? 'hidden_gem',
+            'description' => Str::limit($payload['description'] ?? '', 480),
+            'address' => $payload['address'] ?? null,
+            'neighborhood' => $payload['neighborhood'] ?? null,
+            'tags' => [],
+            'source' => Place::SOURCE_CONTRIBUTION,
+            'status' => Place::STATUS_DRAFT,
+        ]);
+
+        $contribution->update([
+            'status' => Contribution::STATUS_MERGED,
+            'target_place_id' => $place->id,
+            'reviewer_id' => auth()->id(),
+            'reviewed_at' => now(),
+        ]);
+
+        Notification::make()
+            ->title('Lieu créé en brouillon')
+            ->body("« {$name} » est prêt à être édité.")
+            ->success()
+            ->actions([
+                Action::make('open')
+                    ->label('Ouvrir')
+                    ->url(PlaceResource::getUrl('edit', ['record' => $place])),
+            ])
+            ->send();
     }
 
     public static function getPages(): array

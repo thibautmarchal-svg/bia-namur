@@ -1,5 +1,5 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PlaceCard from '@/Components/PlaceCard.vue';
 
@@ -32,6 +32,24 @@ defineProps({
                 <PlaceCard v-for="place in places" :key="place.id" :place="place" />
             </div>
             <p v-else class="font-serif italic text-bia-ink-soft">Aucun lieu publié pour l'instant.</p>
+        </section>
+
+        <section class="container-editorial py-editorial border-t border-bia-cream-dk">
+            <div class="rounded-card border border-bia-primary/20 bg-bia-primary/5 p-6 sm:p-8 max-w-reading">
+                <p class="font-sans text-caption uppercase tracking-[0.2em] text-bia-primary mb-3">
+                    Une bonne adresse à partager ?
+                </p>
+                <h2 class="font-serif text-h3 font-medium text-bia-ink mb-3">
+                    Suggère ton lieu, on le relira.
+                </h2>
+                <p class="text-body text-bia-ink-soft leading-relaxed mb-4">
+                    Le bistrot familial, la librairie indé qu'on connaît peu, la vue qu'il faut chercher.
+                    Tes pépites enrichissent la carte sentimentale.
+                </p>
+                <Link href="/contribuer" class="btn-primary">
+                    Contribuer un lieu
+                </Link>
+            </div>
         </section>
     </AppLayout>
 </template>
