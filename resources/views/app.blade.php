@@ -7,7 +7,9 @@
     <meta name="description" content="Bia Namur — le carnet vivant des Namurois. Brief hebdo curaté, carte sentimentale des bonnes adresses, stories du patrimoine.">
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="apple-touch-icon" href="/logo.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
 
     <title inertia>{{ config('app.name', 'Bia Namur') }}</title>
 

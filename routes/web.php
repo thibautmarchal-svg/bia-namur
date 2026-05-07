@@ -23,3 +23,9 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [MagicLinkController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
+
+// Page de demo composants UI — uniquement en environnement local
+if (app()->environment('local')) {
+    Route::get('/dev/components', fn () => Inertia::render('Dev/Components'))
+        ->name('dev.components');
+}

@@ -22,9 +22,13 @@ export default defineConfig({
             injectRegister: 'auto',
             includeAssets: [
                 'favicon.svg',
+                'favicon-16.png',
+                'favicon-32.png',
                 'logo.svg',
-                'icons/icon-512.svg',
-                'icons/icon-maskable-512.svg',
+                'icons/icon-192.png',
+                'icons/icon-512.png',
+                'icons/icon-maskable-512.png',
+                'icons/apple-touch-icon.png',
             ],
             manifest: {
                 name: 'Bia Namur — Le carnet vivant des namurois',
@@ -39,15 +43,27 @@ export default defineConfig({
                 background_color: '#F5EDDC',
                 icons: [
                     {
-                        src: '/icons/icon-512.svg',
-                        sizes: '512x512',
-                        type: 'image/svg+xml',
+                        src: '/icons/icon-192.png',
+                        sizes: '192x192',
+                        type: 'image/png',
+                        purpose: 'any',
                     },
                     {
-                        src: '/icons/icon-maskable-512.svg',
+                        src: '/icons/icon-512.png',
                         sizes: '512x512',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
+                        purpose: 'any',
+                    },
+                    {
+                        src: '/icons/icon-maskable-512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
                         purpose: 'maskable',
+                    },
+                    {
+                        src: '/logo.svg',
+                        sizes: 'any',
+                        type: 'image/svg+xml',
                     },
                 ],
             },
