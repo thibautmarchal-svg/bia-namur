@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\JsonLdBuilder;
 use App\Support\PhotoResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -31,6 +32,10 @@ class PlaceResource extends JsonResource
             'source' => $this->source,
             'story' => StoryResource::make($this->whenLoaded('story')),
             'updated_at' => $this->updated_at?->toIso8601String(),
+            'jsonld' => $this->when(
+                $request->routeIs('places.show'),
+                fn () => JsonLdBuilder::forPlace($this->resource),
+            ),
         ];
     }
 }

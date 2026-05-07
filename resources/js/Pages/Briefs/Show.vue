@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import EditorialHero from '@/Components/EditorialHero.vue';
 import BriefList from '@/Components/BriefList.vue';
+import JsonLd from '@/Components/JsonLd.vue';
 
 const props = defineProps({
     brief: { type: Object, required: true },
@@ -16,6 +17,8 @@ const items = props.brief.items ?? [];
         <title>{{ brief.title }}</title>
         <meta name="description" :content="brief.intro_text" />
     </Head>
+
+    <JsonLd v-if="brief.jsonld" :schema="brief.jsonld" />
 
     <AppLayout>
         <EditorialHero

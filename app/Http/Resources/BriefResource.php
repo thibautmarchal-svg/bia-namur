@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\JsonLdBuilder;
 use App\Support\PhotoResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,6 +29,10 @@ class BriefResource extends JsonResource
             'published_at' => $this->published_at?->toIso8601String(),
             'cover_photo' => $cover,
             'items' => BriefItemResource::collection($this->whenLoaded('items')),
+            'jsonld' => $this->when(
+                $request->routeIs('briefs.show'),
+                fn () => JsonLdBuilder::forBrief($this->resource),
+            ),
         ];
     }
 }
