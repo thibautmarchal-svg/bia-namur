@@ -113,14 +113,7 @@ class PlaceResource extends Resource
                             ->disk('public')
                             ->imageEditor()
                             ->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
-                            ->helperText('JPG / PNG / WebP, 5 Mo max. EXIF (geoloc, appareil) auto supprimés.')
-                            ->dehydrated(false)
-                            ->afterStateUpdated(function ($state, ?Place $record, callable $set) {
-                                if (! $state || ! $record) {
-                                    return;
-                                }
-                                self::handleCoverPhotoUpload($state, $record, $set);
-                            })
+                            ->helperText('JPG / PNG / WebP, 5 Mo max. EXIF (geoloc, appareil) auto supprimés. La photo est traitée à l\'enregistrement.')
                             ->columnSpanFull(),
                     ]),
 
@@ -179,7 +172,8 @@ class PlaceResource extends Resource
                                 return function (string $attribute, $value, \Closure $fail) use ($get) {
                                     if ($value === Place::STATUS_PUBLISHED) {
                                         $coverId = $get('cover_photo_id');
-                                        if (empty($coverId)) {
+                                        $upload = $get('cover_photo_upload');
+                                        if (empty($coverId) && empty($upload)) {
                                             $fail('Impossible de publier sans photo de couverture. Ajoute une photo dans la section "Photo de couverture" plus haut.');
                                         }
                                     }
@@ -300,10 +294,22 @@ class PlaceResource extends Resource
     }
 
     /**
-     * Handler appele apres upload du Filament FileUpload : transfere le
-     * fichier temp vers PhotoUploadService (strip EXIF + resize) puis
-     * pose cover_photo_id sur le record.
+     * Process le fichier temp uploadé via Filament FileUpload : passe
+     * par PhotoUploadService (strip EXIF + resize), cree un Photo
+     * polymorphique, pose cover_photo_id sur le record, supprime
+     * l'ancien si remplace, cleanup le temp Filament.
+     *
+     * Appelee depuis EditPlace::afterSave et CreatePlace::afterCreate
+     * une fois que le record est persiste en BDD (id disponible).
      */
+    public static function processCoverPhotoUpload(?string $tempPath, Place $record): void
+    {
+        if (empty($tempPath)) {
+            return;
+        }
+        self::handleCoverPhotoUpload($tempPath, $record, fn () => null);
+    }
+
     protected static function handleCoverPhotoUpload($state, Place $record, callable $set): void
     {
         // $state peut etre un array (multiple) ou un string (single) selon Filament version

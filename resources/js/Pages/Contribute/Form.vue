@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -17,12 +17,45 @@ const form = useForm({
     why: '',
     contributor_email: '',
     contributor_name: '',
+    photo: null,
 });
 
 const descCount = computed(() => (form.description || '').length);
 const descLimit = 500;
 
-const submit = () => form.post('/contribuer', { preserveScroll: true });
+const photoPreview = ref(null);
+const photoInput = ref(null);
+
+const onPhotoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (! file) {
+        form.photo = null;
+        photoPreview.value = null;
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        form.errors.photo = 'La photo dépasse 5 Mo. Compresse-la avant de l\'envoyer.';
+        photoInput.value.value = '';
+        return;
+    }
+    form.photo = file;
+    form.errors.photo = null;
+
+    const reader = new FileReader();
+    reader.onload = (e) => { photoPreview.value = e.target.result; };
+    reader.readAsDataURL(file);
+};
+
+const removePhoto = () => {
+    form.photo = null;
+    photoPreview.value = null;
+    if (photoInput.value) photoInput.value.value = '';
+};
+
+const submit = () => form.post('/contribuer', {
+    preserveScroll: true,
+    forceFormData: true,    // necessaire pour multipart/form-data avec File
+});
 </script>
 
 <template>
@@ -115,6 +148,55 @@ const submit = () => form.post('/contribuer', { preserveScroll: true });
                             {{ descCount }} / {{ descLimit }}
                         </p>
                     </div>
+                </div>
+
+                <!-- Photo (vivement recommandée) -->
+                <div>
+                    <label for="photo" class="block text-caption uppercase tracking-widest text-bia-ink-soft mb-2">
+                        Une photo
+                        <span class="text-bia-primary lowercase tracking-normal not-italic ml-1">— vivement recommandée</span>
+                    </label>
+                    <p class="text-caption text-bia-ink-soft italic mb-3 max-w-reading">
+                        Sans photo, ta suggestion a beaucoup moins de chances d'être publiée — on ne fait pas paraître
+                        de fiches sans visuel. Une photo prise au téléphone suffit largement.
+                    </p>
+
+                    <div v-if="photoPreview" class="relative rounded-card overflow-hidden border border-bia-cream-dk bg-bia-cream-dk">
+                        <img :src="photoPreview" alt="Aperçu de la photo" class="w-full max-h-80 object-cover" />
+                        <button
+                            type="button"
+                            @click="removePhoto"
+                            class="absolute top-3 right-3 bg-bia-cream/90 backdrop-blur-sm rounded-pill px-3 py-1.5 text-caption text-bia-ink hover:text-bia-accent transition-colors"
+                        >
+                            ✕ Retirer
+                        </button>
+                    </div>
+
+                    <label
+                        v-else
+                        for="photo"
+                        class="flex flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-bia-cream-dk bg-white px-6 py-10 cursor-pointer hover:border-bia-primary hover:bg-bia-cream/30 transition-colors"
+                    >
+                        <svg class="w-8 h-8 text-bia-ink-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" />
+                        </svg>
+                        <span class="text-body text-bia-ink-soft">Cliquer pour ajouter une photo</span>
+                        <span class="text-caption text-bia-ink-mute italic">JPG / PNG / WebP, 5 Mo max.</span>
+                    </label>
+
+                    <input
+                        id="photo"
+                        ref="photoInput"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        class="sr-only"
+                        @change="onPhotoChange"
+                    />
+                    <p v-if="form.errors.photo" class="mt-2 text-caption text-bia-accent">{{ form.errors.photo }}</p>
+                    <p class="mt-2 text-xs text-bia-ink-mute italic">
+                        Pas de photo où on voit des personnes identifiables sans leur accord.
+                        Les données EXIF (géoloc, appareil) sont automatiquement supprimées.
+                    </p>
                 </div>
 
                 <!-- Adresse / quartier -->

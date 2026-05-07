@@ -110,14 +110,7 @@ class StoryResource extends Resource
                             ->disk('public')
                             ->imageEditor()
                             ->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
-                            ->helperText('JPG / PNG / WebP, 5 Mo max. EXIF (geoloc, appareil) auto supprimés.')
-                            ->dehydrated(false)
-                            ->afterStateUpdated(function ($state, ?Story $record, callable $set) {
-                                if (! $state || ! $record) {
-                                    return;
-                                }
-                                self::handleCoverPhotoUpload($state, $record, $set);
-                            })
+                            ->helperText('JPG / PNG / WebP, 5 Mo max. EXIF (geoloc, appareil) auto supprimés. La photo est traitée à l\'enregistrement.')
                             ->columnSpanFull(),
                     ]),
 
@@ -145,7 +138,8 @@ class StoryResource extends Resource
                                 return function (string $attribute, $value, \Closure $fail) use ($get) {
                                     if ($value === Story::STATUS_PUBLISHED) {
                                         $coverId = $get('cover_photo_id');
-                                        if (empty($coverId)) {
+                                        $upload = $get('cover_photo_upload');
+                                        if (empty($coverId) && empty($upload)) {
                                             $fail('Impossible de publier sans photo de couverture. Ajoute une photo dans la section "Photo de couverture" plus haut.');
                                         }
                                     }
@@ -245,6 +239,14 @@ class StoryResource extends Resource
      * fichier temp vers PhotoUploadService (strip EXIF + resize) puis
      * pose cover_photo_id sur le record.
      */
+    public static function processCoverPhotoUpload(?string $tempPath, Story $record): void
+    {
+        if (empty($tempPath)) {
+            return;
+        }
+        self::handleCoverPhotoUpload($tempPath, $record, fn () => null);
+    }
+
     protected static function handleCoverPhotoUpload($state, Story $record, callable $set): void
     {
         $tempPath = is_array($state) ? array_values($state)[0] ?? null : $state;
