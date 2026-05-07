@@ -1,15 +1,21 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineProps({
     title: { type: String, default: null },
 });
+
+const page = usePage();
+const user = computed(() => page.props.auth?.user ?? null);
+
+const logout = () => router.post('/logout');
 </script>
 
 <template>
     <div class="min-h-screen flex flex-col">
         <header class="border-b border-bia-cream-dk">
-            <div class="container-editorial py-6">
+            <div class="container-editorial py-6 flex items-center justify-between gap-4">
                 <Link
                     href="/"
                     class="inline-flex items-center gap-3 group"
@@ -17,6 +23,33 @@ defineProps({
                 >
                     <img src="/logo.svg" alt="" class="h-9 w-9" />
                     <span class="font-serif text-h3 font-medium text-bia-ink">Bia Namur</span>
+                </Link>
+
+                <nav v-if="user" class="flex items-center gap-3 text-caption">
+                    <a
+                        v-if="user.is_admin"
+                        href="/admin"
+                        class="text-bia-ink-soft hover:text-bia-primary transition-colors"
+                    >
+                        Admin
+                    </a>
+                    <span class="text-bia-ink-mute hidden sm:inline">·</span>
+                    <span class="text-bia-ink-soft hidden sm:inline">{{ user.name }}</span>
+                    <button
+                        type="button"
+                        @click="logout"
+                        class="text-bia-ink-soft hover:text-bia-primary transition-colors underline-offset-4 hover:underline"
+                    >
+                        Se déconnecter
+                    </button>
+                </nav>
+
+                <Link
+                    v-else
+                    href="/login"
+                    class="text-caption text-bia-ink-soft hover:text-bia-primary transition-colors"
+                >
+                    Se connecter
                 </Link>
             </div>
         </header>
