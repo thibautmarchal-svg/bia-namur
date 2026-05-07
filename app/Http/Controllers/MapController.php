@@ -19,7 +19,12 @@ class MapController extends Controller
             ->published()
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
+            ->orderBy('name')
             ->get();
+
+        // Types et quartiers disponibles pour les filtres (uniquement ceux qui ont des lieux)
+        $typesAvailable = $places->pluck('type')->unique()->values()->toArray();
+        $neighborhoodsAvailable = $places->pluck('neighborhood')->filter()->unique()->sort()->values()->toArray();
 
         return Inertia::render('Map', [
             'city' => [
@@ -30,6 +35,8 @@ class MapController extends Controller
                     'lng' => (float) $namur->longitude,
                 ],
                 'bounding_box' => $namur->bounding_box,
+                'types_available' => $typesAvailable,
+                'neighborhoods_available' => $neighborhoodsAvailable,
             ],
             'places' => PlaceResource::collection($places),
         ]);

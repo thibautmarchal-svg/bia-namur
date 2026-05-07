@@ -1,11 +1,11 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import PlaceCard from '@/Components/PlaceCard.vue';
+import MapView from '@/Components/MapView.vue';
 
 defineProps({
     city: { type: Object, required: true },
-    places: { type: Object, required: true },
+    places: { type: Array, required: true },
 });
 </script>
 
@@ -23,37 +23,19 @@ defineProps({
                 {{ city.name }}, à parcourir
             </h1>
             <p class="prose-bia max-w-reading">
-                Tous les lieux de Bia Namur sur la carte. Filtrable par mood, par quartier, par moment de la journée.
+                Tous les lieux de Bia Namur sur la carte. Filtre par type ou quartier,
+                ou demande à voir ce qu'il y a autour de toi.
             </p>
         </section>
 
-        <!-- Stub Maplibre — la carte interactive arrive en S2 -->
         <section class="container-editorial py-8">
-            <div
-                class="rounded-card overflow-hidden border border-bia-cream-dk bg-bia-cream-dk/40 aspect-[16/9] sm:aspect-[21/9] flex items-center justify-center text-center px-6"
-            >
-                <div class="max-w-md">
-                    <p class="font-sans text-caption uppercase tracking-[0.2em] text-bia-primary mb-3">
-                        Bientôt
-                    </p>
-                    <h2 class="font-serif text-h2 font-medium text-bia-ink mb-3">
-                        La carte interactive
-                    </h2>
-                    <p class="text-body text-bia-ink-soft leading-relaxed">
-                        On prépare la carte Maplibre avec les fonds OpenStreetMap, repensée aux tons crème
-                        et ambré de Bia. En attendant, voilà les lieux publiés en liste.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <section class="container-editorial py-8">
-            <h2 class="font-serif text-h2 font-medium mb-6">
-                {{ places.data?.length ?? 0 }} lieux sur la carte
-            </h2>
-            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <PlaceCard v-for="place in places.data" :key="place.id" :place="place" />
-            </div>
+            <MapView
+                :places="places"
+                :center="city.center"
+                :bounding-box="city.bounding_box"
+                :types-available="city.types_available"
+                :neighborhoods-available="city.neighborhoods_available"
+            />
         </section>
     </AppLayout>
 </template>
