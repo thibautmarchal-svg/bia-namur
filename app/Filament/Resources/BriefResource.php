@@ -109,6 +109,15 @@ class BriefResource extends Resource
                 Tables\Columns\TextColumn::make('week_number')
                     ->label('Sem.')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('items_count')
+                    ->label('Items')
+                    ->counts('items')
+                    ->badge()
+                    ->color(fn (?int $state): string => match (true) {
+                        $state === null || $state < 5 => 'warning',
+                        $state >= 5 && $state <= 7 => 'success',
+                        default => 'danger',
+                    }),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
@@ -139,6 +148,13 @@ class BriefResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            BriefResource\RelationManagers\ItemsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
