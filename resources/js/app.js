@@ -1,4 +1,5 @@
 import './bootstrap';
+import './pwa';
 
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';

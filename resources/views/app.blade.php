@@ -11,6 +11,11 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
 
+    {{-- PWA manifest : present uniquement en build prod (Vite l'a genere dans /build) --}}
+    @if (file_exists(public_path('build/manifest.webmanifest')))
+        <link rel="manifest" href="{{ asset('build/manifest.webmanifest') }}">
+    @endif
+
     <title inertia>{{ config('app.name', 'Bia Namur') }}</title>
 
     {{-- Fontes via Bunny Fonts (alternative Google Fonts respectueuse RGPD) --}}
