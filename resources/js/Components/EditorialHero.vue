@@ -1,31 +1,40 @@
 <script setup>
+import PhotoCredit from '@/Components/PhotoCredit.vue';
+
 defineProps({
     eyebrow: { type: String, default: null },
     title: { type: String, required: true },
     titleAccent: { type: String, default: null },
     intro: { type: String, default: null },
-    photoUrl: { type: String, default: null },
-    photoAlt: { type: String, default: '' },
-    photoCredit: { type: String, default: null },
+    /** Payload PhotoResolver::for() */
+    photo: { type: Object, default: null },
 });
 </script>
 
 <template>
     <section class="editorial-hero">
-        <div v-if="photoUrl" class="editorial-hero__media">
-            <img
-                :src="photoUrl"
-                :alt="photoAlt"
-                class="w-full h-full object-cover"
-                loading="eager"
-                decoding="async"
-            />
-            <p
-                v-if="photoCredit"
-                class="absolute bottom-3 right-4 text-xs text-white/80 font-sans italic mix-blend-overlay"
+        <div v-if="photo" class="editorial-hero__media">
+            <picture>
+                <source
+                    v-if="photo.srcset && photo.srcset.includes('.webp')"
+                    :srcset="photo.srcset"
+                    :sizes="photo.sizes"
+                    type="image/webp"
+                />
+                <img
+                    :src="photo.src_jpg || photo.url"
+                    :alt="photo.alt"
+                    class="w-full h-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                />
+            </picture>
+            <div
+                v-if="photo.credit"
+                class="absolute bottom-3 right-4 max-w-xs bg-bia-cream/90 backdrop-blur-sm rounded-pill px-3 py-1 shadow-sm"
             >
-                {{ photoCredit }}
-            </p>
+                <PhotoCredit :photo="photo" variant="compact" />
+            </div>
         </div>
 
         <div class="container-editorial pt-editorial pb-12">

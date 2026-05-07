@@ -3,12 +3,14 @@ import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataAttribution from '@/Components/DataAttribution.vue';
+import PhotoCredit from '@/Components/PhotoCredit.vue';
 
 const props = defineProps({
     place: { type: Object, required: true },
 });
 
 const data = props.place.data ?? props.place;
+const photo = computed(() => data.cover_photo ?? null);
 
 const TYPE_LABELS = {
     cafe: 'Café',
@@ -44,6 +46,30 @@ const contact = computed(() =>
     </Head>
 
     <AppLayout>
+        <div v-if="photo" class="place-cover">
+            <picture>
+                <source
+                    v-if="photo.srcset && photo.srcset.includes('.webp')"
+                    :srcset="photo.srcset"
+                    :sizes="photo.sizes"
+                    type="image/webp"
+                />
+                <img
+                    :src="photo.src_jpg || photo.url"
+                    :alt="photo.alt"
+                    class="w-full h-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                />
+            </picture>
+            <div
+                v-if="photo.credit"
+                class="absolute bottom-3 right-4 max-w-xs bg-bia-cream/90 backdrop-blur-sm rounded-pill px-3 py-1 shadow-sm"
+            >
+                <PhotoCredit :photo="photo" variant="compact" />
+            </div>
+        </div>
+
         <section class="container-editorial pt-editorial pb-8 max-w-3xl">
             <p class="font-sans text-caption uppercase tracking-[0.2em] text-bia-primary mb-4">
                 {{ typeLabel }}
@@ -139,3 +165,19 @@ const contact = computed(() =>
         </section>
     </AppLayout>
 </template>
+
+<style scoped>
+.place-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    max-height: 60vh;
+    overflow: hidden;
+    background: theme('colors.bia.cream-dk');
+}
+@media (min-width: 768px) {
+    .place-cover {
+        aspect-ratio: 21 / 9;
+    }
+}
+</style>

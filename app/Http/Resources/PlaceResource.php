@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\PhotoResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,7 +25,7 @@ class PlaceResource extends JsonResource
             'tags' => $this->tags ?? [],
             'is_sponsored' => (bool) $this->is_sponsored,
             'sponsored_label' => $this->sponsored_label,
-            'cover_photo_url' => null,    // S2 quand R2 + uploads en place
+            'cover_photo' => PhotoResolver::for(PhotoResolver::TYPE_PLACE, $this->slug, $this->name),
             'source' => $this->source,
             'story' => StoryResource::make($this->whenLoaded('story')),
             'updated_at' => $this->updated_at?->toIso8601String(),

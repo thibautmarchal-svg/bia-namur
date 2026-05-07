@@ -22,10 +22,9 @@ const TYPE_LABELS = {
 };
 
 const typeLabel = computed(() => TYPE_LABELS[props.place.type] ?? props.place.type);
-
 const visibleTags = computed(() => (props.place.tags ?? []).slice(0, 3));
-
 const linkHref = computed(() => props.href ?? `/lieu/${props.place.slug}`);
+const photo = computed(() => props.place.cover_photo ?? null);
 </script>
 
 <template>
@@ -35,14 +34,21 @@ const linkHref = computed(() => props.href ?? `/lieu/${props.place.slug}`);
             class="block rounded-card overflow-hidden bg-white border border-bia-cream-dk shadow-editorial hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
         >
             <div class="aspect-[4/3] bg-bia-cream-dk overflow-hidden">
-                <img
-                    v-if="place.cover_photo_url"
-                    :src="place.cover_photo_url"
-                    :alt="place.cover_photo_alt ?? place.name"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    decoding="async"
-                />
+                <picture v-if="photo">
+                    <source
+                        v-if="photo.srcset && photo.srcset.includes('.webp')"
+                        :srcset="photo.srcset"
+                        sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+                        type="image/webp"
+                    />
+                    <img
+                        :src="photo.src_jpg || photo.url"
+                        :alt="photo.alt || place.name"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        decoding="async"
+                    />
+                </picture>
                 <div
                     v-else
                     class="w-full h-full flex items-center justify-center text-bia-ink-mute font-serif text-h2 italic"

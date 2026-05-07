@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import PhotoCredit from '@/Components/PhotoCredit.vue';
 
 const props = defineProps({
     story: { type: Object, required: true },
@@ -14,6 +15,7 @@ const TYPE_LABELS = {
 };
 
 const typeLabel = computed(() => TYPE_LABELS[props.story.type] ?? props.story.type);
+const photo = computed(() => props.story.cover_photo ?? null);
 
 /** Rendu markdown minimaliste pour une story : paragraphes, **bold**, _italic_. */
 const renderedHtml = computed(() => {
@@ -42,6 +44,24 @@ const renderedHtml = computed(() => {
 
 <template>
     <article class="story-article">
+        <div v-if="photo" class="story-cover">
+            <picture>
+                <source
+                    v-if="photo.srcset && photo.srcset.includes('.webp')"
+                    :srcset="photo.srcset"
+                    :sizes="photo.sizes"
+                    type="image/webp"
+                />
+                <img
+                    :src="photo.src_jpg || photo.url"
+                    :alt="photo.alt"
+                    class="w-full h-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                />
+            </picture>
+        </div>
+
         <header class="container-editorial pt-editorial pb-8 max-w-reading">
             <p class="font-sans text-caption uppercase tracking-[0.2em] text-bia-primary mb-4">
                 {{ typeLabel }}
@@ -68,7 +88,8 @@ const renderedHtml = computed(() => {
             v-html="renderedHtml"
         />
 
-        <footer class="container-editorial mt-editorial pt-8 border-t border-bia-cream-dk max-w-reading">
+        <footer class="container-editorial mt-editorial pt-8 border-t border-bia-cream-dk max-w-reading space-y-3">
+            <PhotoCredit v-if="photo?.credit" :photo="photo" variant="full" />
             <p v-if="story.ai_generated" class="text-caption text-bia-ink-mute italic">
                 Texte initial proposé par notre pipeline éditorial, relu et validé par un humain.
             </p>
@@ -80,6 +101,18 @@ const renderedHtml = computed(() => {
 </template>
 
 <style scoped>
+.story-cover {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    max-height: 60vh;
+    overflow: hidden;
+    background: theme('colors.bia.cream-dk');
+}
+@media (min-width: 768px) {
+    .story-cover {
+        aspect-ratio: 21 / 9;
+    }
+}
 .prose-story :deep(p) {
     margin-bottom: theme('spacing.reading');
     line-height: 1.8;

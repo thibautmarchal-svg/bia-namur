@@ -58,3 +58,8 @@ _tmp_laravel/
 # Misc
 *.bak
 *.tmp
+
+# Photos backup (originaux Wikimedia, retelechargeables)
+*.original.jpg
+*.original.png
+*.original.jpeg

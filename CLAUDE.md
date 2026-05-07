@@ -151,6 +151,34 @@ npm run dev
 
 ---
 
+## Photos par défaut + override perso
+
+Bia Namur utilise un système deux niveaux pour les photos de couverture (lieux + stories).
+
+### Niveau 1 — Override perso (priorité)
+Dépose une photo dans `public/images/places/{slug}.{webp|jpg|png}` ou `public/images/stories/{slug}.{webp|jpg|png}` et elle remplace automatiquement la photo par défaut. Aucun crédit affiché (assume copyright Bia Namur ou contribution sous CGU).
+
+Exemples :
+```
+public/images/places/le-bia-bouquet.jpg          # ta photo perso du bistrot
+public/images/places/citadelle-de-namur.webp     # ta photo perso de la Citadelle
+public/images/stories/lorigine-du-bia-bouquet.jpg
+```
+
+Format recommandé : 1600×900 (aspect 16:9) en `.jpg` qualité 82 ou `.webp`. Le helper `App\Support\PhotoResolver` cherche les extensions dans cet ordre : `webp`, `jpg`, `jpeg`, `png`.
+
+### Niveau 2 — Photos par défaut (fallback Wikimedia Commons)
+Si aucune photo perso n'est trouvée, le helper utilise les photos déclarées dans `config/bia-photos.php` (sourcing Wikimedia Commons, licences CC BY 2.0 / CC BY-SA 3.0). Le crédit photo + lien licence sont affichés automatiquement via le composant `<PhotoCredit />`.
+
+Pour ajouter une nouvelle photo par défaut :
+1. Trouve un fichier sur [commons.wikimedia.org](https://commons.wikimedia.org) avec licence CC BY ou CC BY-SA
+2. Télécharge-le dans `public/images/defaults/places/{slug}.jpg` ou `public/images/defaults/stories/{slug}.jpg`
+3. Lance `node scripts/optimize-photos.mjs` pour générer les variantes WebP 800/1600 + JPG optimisé
+4. Ajoute l'entrée dans `config/bia-photos.php` avec `path`, `alt`, `credit`, `license`, `license_url`, `source_url`
+5. `php artisan optimize:clear`
+
+---
+
 ## Calendrier S1 — état d'avancement
 
 - ✅ J1 : Bootstrap Laravel 11 + Inertia + Vue 3 + Tailwind 3.4 (palette Bia) + vite-plugin-pwa + page d'accueil rendue HTTP 200
