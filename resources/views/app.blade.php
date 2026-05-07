@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#C77F2C">
     <meta name="description" content="Bia Namur — le carnet vivant des Namurois. Brief hebdo curaté, carte sentimentale des bonnes adresses, stories du patrimoine.">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">

@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PlaceCard from '@/Components/PlaceCard.vue';
+import PushOptIn from '@/Components/PushOptIn.vue';
 
 const props = defineProps({
     places: { type: Array, required: true },
@@ -101,6 +102,10 @@ const remaining = computed(() => Math.max(0, props.limit - props.count));
                     </Link>
                 </li>
             </ul>
+        </section>
+
+        <section class="container-editorial pb-editorial">
+            <PushOptIn variant="card" />
         </section>
 
         <section v-if="isFull && tier === 'free'" class="container-editorial py-editorial border-t border-bia-cream-dk">

@@ -320,6 +320,26 @@ PROMPT,
 
     /*
     |--------------------------------------------------------------------------
+    | PWA push notifications (VAPID)
+    |--------------------------------------------------------------------------
+    |
+    | Cles generees une fois pour toutes via `php artisan bia:vapid:generate`
+    | et stockees dans .env. Si on les regenere, tous les abonnes existants
+    | doivent re-souscrire.
+    |
+    | fake : en mode test, le service retourne un report fake sans appel reseau.
+    */
+
+    'push' => [
+        'enabled' => env('BIA_PUSH_ENABLED', false),
+        'fake' => env('BIA_PUSH_FAKE', false),
+        'vapid_public_key' => env('BIA_VAPID_PUBLIC_KEY'),
+        'vapid_private_key' => env('BIA_VAPID_PRIVATE_KEY'),
+        'vapid_subject' => env('BIA_VAPID_SUBJECT', 'mailto:contact@bianamur.be'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Wallon namurois — vocabulaire de base (cf. brief annexe C)
     |--------------------------------------------------------------------------
     */

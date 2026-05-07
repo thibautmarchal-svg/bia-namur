@@ -68,6 +68,9 @@ export default defineConfig({
                 ],
             },
             workbox: {
+                // Importe notre handler push (notifications + click) dans le SW genere.
+                // Le fichier est servi depuis /push-sw.js (public/), donc relatif au scope.
+                importScripts: ['/push-sw.js'],
                 navigateFallbackDenylist: [/^\/admin/, /^\/api/, /^\/build/],
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
                 // Le chunk Map (Maplibre + deps, ~1 MB) ne sert que sur /carte.

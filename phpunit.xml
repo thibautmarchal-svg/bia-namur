@@ -31,5 +31,10 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="BIA_AI_MOCK_MODE" value="true"/>
         <env name="ANTHROPIC_API_KEY" value="sk-ant-test-fake"/>
+        <env name="BIA_PUSH_ENABLED" value="true"/>
+        <env name="BIA_PUSH_FAKE" value="true"/>
+        <env name="BIA_VAPID_PUBLIC_KEY" value="BIOcMpkr6wbjv3CZ9Ng59M-DqxVi9JWx5IJ8v70MbADmpcmEt15nU_lRQnuyK3Jnx-3vifL8yiVqBTJvsMPA7jc"/>
+        <env name="BIA_VAPID_PRIVATE_KEY" value="GeqgycK_5QPSWw3C-3t6wUf5gbU90yihTrmvTJpEGF8"/>
+        <env name="BIA_VAPID_SUBJECT" value="mailto:test@bianamur.be"/>
     </php>
 </phpunit>

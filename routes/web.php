@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
@@ -69,6 +70,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/favoris/toggle', [FavoriteController::class, 'toggle'])
         ->middleware('throttle:60,1')
         ->name('favorites.toggle');
+
+    // Push notifications (subscribe = stockage endpoint apres opt-in explicite)
+    Route::post('/push/subscribe', [PushController::class, 'subscribe'])
+        ->middleware('throttle:10,1')
+        ->name('push.subscribe');
+    Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])
+        ->middleware('throttle:10,1')
+        ->name('push.unsubscribe');
 });
 
 // Page de demo composants UI — uniquement en environnement local

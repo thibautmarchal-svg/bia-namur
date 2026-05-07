@@ -54,6 +54,10 @@ class HandleInertiaRequests extends Middleware
                     : ['places' => [], 'stories' => []],
             ],
             'flash' => fn () => $request->session()->get('flash'),
+            // Cle VAPID publique pour le frontend (PushOptIn). Null si push desactive.
+            'pushVapidPublicKey' => fn () => config('bia.push.enabled')
+                ? config('bia.push.vapid_public_key')
+                : null,
         ];
     }
 
