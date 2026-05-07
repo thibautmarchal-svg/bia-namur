@@ -80,6 +80,13 @@ const logout = () => router.post('/logout');
                                 <path d="M12 21s-7.5-4.7-9.6-9.3C1 8.4 3 5 6.4 5c2 0 3.6 1.1 4.6 2.6C12 6.1 13.6 5 15.6 5 19 5 21 8.4 19.6 11.7 17.5 16.3 12 21 12 21z"/>
                             </svg>
                         </Link>
+                        <Link
+                            href="/mon-compte"
+                            class="hidden sm:inline text-bia-ink-soft hover:text-bia-primary transition-colors"
+                            :title="user.name"
+                        >
+                            Mon compte
+                        </Link>
                         <a
                             v-if="user.is_admin"
                             href="/admin"

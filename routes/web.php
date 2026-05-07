@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\MagicLinkController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BriefController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\FavoriteController;
@@ -78,6 +79,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])
         ->middleware('throttle:10,1')
         ->name('push.unsubscribe');
+
+    // Compte utilisateur + RGPD (export, suppression)
+    Route::get('/mon-compte', [AccountController::class, 'show'])->name('account.show');
+    Route::put('/mon-compte', [AccountController::class, 'update'])->name('account.update');
+    Route::get('/me/export', [AccountController::class, 'export'])
+        ->middleware('throttle:5,60')
+        ->name('account.export');
+    Route::post('/me/delete', [AccountController::class, 'destroy'])
+        ->middleware('throttle:3,60')
+        ->name('account.destroy');
 });
 
 // Page de demo composants UI — uniquement en environnement local
