@@ -4,12 +4,18 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StoryResource\Pages;
 use App\Models\City;
+use App\Models\Photo;
 use App\Models\Story;
+use App\Services\Media\PhotoUploadService;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\HtmlString;
 
 class StoryResource extends Resource
 {
@@ -74,6 +80,47 @@ class StoryResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
+                Forms\Components\Hidden::make('cover_photo_id'),
+
+                Forms\Components\Section::make('Photo de couverture')
+                    ->description('Indispensable pour publier — pas de story sans photo.')
+                    ->schema([
+                        Forms\Components\Placeholder::make('current_cover')
+                            ->label('Photo actuelle')
+                            ->content(function (?Story $record) {
+                                if (! $record || ! $record->cover_photo_id) {
+                                    return new HtmlString('<em style="color:#8B7E72">Aucune photo. La story ne pourra pas etre publiée sans photo.</em>');
+                                }
+                                $photo = $record->coverPhoto;
+                                if (! $photo) {
+                                    return 'Photo référencée mais introuvable.';
+                                }
+
+                                return new HtmlString(sprintf(
+                                    '<img src="%s" alt="" style="max-width:480px;max-height:280px;border-radius:.75rem;border:1px solid #E8DDC5;" />',
+                                    asset('storage/' . $photo->path),
+                                ));
+                            })
+                            ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('cover_photo_upload')
+                            ->label('Remplacer / ajouter une photo')
+                            ->image()
+                            ->maxSize(5120)
+                            ->directory('uploads/stories/_temp')
+                            ->disk('public')
+                            ->imageEditor()
+                            ->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
+                            ->helperText('JPG / PNG / WebP, 5 Mo max. EXIF (geoloc, appareil) auto supprimés.')
+                            ->dehydrated(false)
+                            ->afterStateUpdated(function ($state, ?Story $record, callable $set) {
+                                if (! $state || ! $record) {
+                                    return;
+                                }
+                                self::handleCoverPhotoUpload($state, $record, $set);
+                            })
+                            ->columnSpanFull(),
+                    ]),
+
                 Forms\Components\Section::make('Génération IA')
                     ->columns(3)
                     ->collapsible()
@@ -93,6 +140,17 @@ class StoryResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('status')
                             ->label('Statut')
+                            ->helperText('Pas de passage en "Publié" sans photo de couverture.')
+                            ->rule(function (callable $get) {
+                                return function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    if ($value === Story::STATUS_PUBLISHED) {
+                                        $coverId = $get('cover_photo_id');
+                                        if (empty($coverId)) {
+                                            $fail('Impossible de publier sans photo de couverture. Ajoute une photo dans la section "Photo de couverture" plus haut.');
+                                        }
+                                    }
+                                };
+                            })
                             ->options([
                                 Story::STATUS_DRAFT => 'Brouillon',
                                 Story::STATUS_PENDING_REVIEW => 'À relire',
@@ -180,5 +238,64 @@ class StoryResource extends Resource
             'create' => Pages\CreateStory::route('/create'),
             'edit' => Pages\EditStory::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Handler appele apres upload du Filament FileUpload : transfere le
+     * fichier temp vers PhotoUploadService (strip EXIF + resize) puis
+     * pose cover_photo_id sur le record.
+     */
+    protected static function handleCoverPhotoUpload($state, Story $record, callable $set): void
+    {
+        $tempPath = is_array($state) ? array_values($state)[0] ?? null : $state;
+        if (! $tempPath) {
+            return;
+        }
+
+        $absoluteTemp = Storage::disk('public')->path($tempPath);
+        if (! is_file($absoluteTemp)) {
+            return;
+        }
+
+        $uploaded = new UploadedFile(
+            path: $absoluteTemp,
+            originalName: basename($absoluteTemp),
+            mimeType: mime_content_type($absoluteTemp) ?: 'application/octet-stream',
+            test: true,
+        );
+
+        try {
+            $photo = app(PhotoUploadService::class)->storeFor(
+                file: $uploaded,
+                uploadable: $record,
+                uploadedBy: auth()->id(),
+                credit: null,
+            );
+
+            if ($record->cover_photo_id && $record->cover_photo_id !== $photo->id) {
+                $oldPhoto = Photo::find($record->cover_photo_id);
+                if ($oldPhoto) {
+                    Storage::disk($oldPhoto->disk)->delete($oldPhoto->path);
+                    $oldPhoto->delete();
+                }
+            }
+
+            $record->cover_photo_id = $photo->id;
+            $record->save();
+            $set('cover_photo_id', $photo->id);
+
+            Storage::disk('public')->delete($tempPath);
+
+            Notification::make()
+                ->title('Photo de couverture mise à jour')
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('Échec upload photo')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 }
