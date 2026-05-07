@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BriefResource\Pages;
 use App\Models\Brief;
+use App\Models\City;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -36,7 +37,7 @@ class BriefResource extends Resource
                         Forms\Components\Select::make('city_id')
                             ->label('Ville')
                             ->relationship('city', 'name')
-                            ->default(fn () => \App\Models\City::where('slug', 'namur')->value('id'))
+                            ->default(fn () => City::where('slug', 'namur')->value('id'))
                             ->required(),
                         Forms\Components\TextInput::make('year')
                             ->label('Année')

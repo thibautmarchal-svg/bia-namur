@@ -29,7 +29,7 @@ class MagicLinkMail extends Mailable
         return new Content(
             view: 'emails.magic-link',
             with: [
-                'url' => url('/auth/magic-link/'.$this->token),
+                'url' => url('/auth/magic-link/' . $this->token),
                 'userName' => $this->userName,
                 'expiresInMinutes' => 15,
             ],

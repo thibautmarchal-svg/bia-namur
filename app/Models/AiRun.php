@@ -11,13 +11,19 @@ class AiRun extends Model
     use HasFactory;
 
     public const TYPE_BRIEF_WEEKLY = 'brief_weekly';
+
     public const TYPE_STORY_GENERATION = 'story_generation';
+
     public const TYPE_CONTRIBUTION_MODERATION = 'contribution_moderation';
+
     public const TYPE_EVENT_CATEGORIZATION = 'event_categorization';
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_SUCCESS = 'success';
+
     public const STATUS_FAILED = 'failed';
+
     public const STATUS_TIMEOUT = 'timeout';
 
     protected $fillable = [

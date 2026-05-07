@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AiRun;
 use App\Models\Brief;
 use App\Models\BriefItem;
 use App\Models\City;
@@ -36,6 +37,7 @@ class GenerateBriefJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public array $backoff = [10, 60, 180];   // 10s, 1min, 3min
 
     public function __construct(
@@ -123,7 +125,7 @@ class GenerateBriefJob implements ShouldQueue
 
             // Lien polymorphique : ai_runs.related → ce brief
             if ($completion->aiRunId) {
-                \App\Models\AiRun::where('id', $completion->aiRunId)->update([
+                AiRun::where('id', $completion->aiRunId)->update([
                     'related_type' => Brief::class,
                     'related_id' => $brief->id,
                 ]);
@@ -167,12 +169,12 @@ class GenerateBriefJob implements ShouldQueue
     protected function formatItemAsMarkdown(array $item): string
     {
         $parts = [];
-        $parts[] = '**'.($item['title'] ?? '').'**';
+        $parts[] = '**' . ($item['title'] ?? '') . '**';
         if (! empty($item['venue'])) {
             $parts[] = $item['venue'];
         }
         if (! empty($item['when_text'])) {
-            $parts[] = '_'.$item['when_text'].'_';
+            $parts[] = '_' . $item['when_text'] . '_';
         }
         if (! empty($item['angle'])) {
             $parts[] = '';

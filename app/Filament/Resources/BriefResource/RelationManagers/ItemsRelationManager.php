@@ -87,7 +87,7 @@ class ItemsRelationManager extends RelationManager
                     ->label('Texte')
                     ->getStateUsing(fn ($record) => Str::limit(
                         strip_tags(str_replace(['**', '_'], '', $record->edited_text ?: $record->ai_text ?: '')),
-                        100
+                        100,
                     ))
                     ->wrap()
                     ->extraAttributes(['class' => 'font-serif']),

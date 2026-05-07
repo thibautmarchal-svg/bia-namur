@@ -19,7 +19,10 @@ namespace App\Support;
 class PhotoResolver
 {
     public const TYPE_PLACE = 'places';
+
     public const TYPE_STORY = 'stories';
+
+    public const TYPE_BRIEF = 'briefs';
 
     /**
      * Retourne le payload photo pour un slug donne.

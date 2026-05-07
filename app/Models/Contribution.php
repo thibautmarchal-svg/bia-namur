@@ -11,14 +11,21 @@ class Contribution extends Model
     use HasFactory;
 
     public const TYPE_PLACE_SUGGESTION = 'place_suggestion';
+
     public const TYPE_PHOTO = 'photo';
+
     public const TYPE_CORRECTION = 'correction';
+
     public const TYPE_STORY_PROPOSAL = 'story_proposal';
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_AUTO_APPROVED = 'auto_approved';
+
     public const STATUS_MANUAL_REVIEW = 'manual_review';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_MERGED = 'merged';
 
     protected $fillable = [

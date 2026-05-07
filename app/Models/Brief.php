@@ -12,11 +12,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Brief extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCity;
+    use BelongsToCity, HasFactory, SoftDeletes;
 
     public const STATUS_DRAFT_AI = 'draft_ai';
+
     public const STATUS_PENDING_REVIEW = 'pending_review';
+
     public const STATUS_PUBLISHED = 'published';
+
     public const STATUS_ARCHIVED = 'archived';
 
     protected $fillable = [

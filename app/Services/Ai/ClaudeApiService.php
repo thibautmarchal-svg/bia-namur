@@ -149,8 +149,8 @@ class ClaudeApiService
         // - timeout config('bia.ai.timeout_seconds')
         // - extraction text + usage.input_tokens + usage.output_tokens
         throw new RuntimeException(
-            'Appel reel a Anthropic API non encore implemente (S2). '.
-            'Active BIA_AI_MOCK_MODE=true en local pour utiliser les fixtures.'
+            'Appel reel a Anthropic API non encore implemente (S2). ' .
+            'Active BIA_AI_MOCK_MODE=true en local pour utiliser les fixtures.',
         );
     }
 

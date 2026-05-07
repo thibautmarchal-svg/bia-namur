@@ -62,6 +62,20 @@ return [
         ],
     ],
 
+    'briefs' => [
+        // Photo de hero par defaut pour les briefs hebdo. Une photo
+        // saisonniere par brief sera possible en S2 (champ cover_photo
+        // sur la table briefs + upload Filament).
+        'default' => [
+            'path' => 'images/defaults/places/confluent-sambre-meuse',
+            'alt' => 'Confluent de la Sambre et de la Meuse à Namur',
+            'credit' => 'Calonne Marcel',
+            'license' => 'CC BY-SA 3.0',
+            'license_url' => 'https://creativecommons.org/licenses/by-sa/3.0/',
+            'source_url' => 'https://commons.wikimedia.org/wiki/File:Namur_Confluent_IMG_1408.JPG',
+        ],
+    ],
+
     'stories' => [
         'la-rue-saintraint' => [
             // La rue Saintraint mene vers la Cathedrale Saint-Aubain.

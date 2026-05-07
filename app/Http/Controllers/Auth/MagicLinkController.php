@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,8 +36,8 @@ class MagicLinkController extends Controller
 
         $email = strtolower(trim($request->string('email')));
 
-        $emailKey = 'magic-link-email:'.sha1($email);
-        $ipKey = 'magic-link-ip:'.sha1($request->ip() ?? 'unknown');
+        $emailKey = 'magic-link-email:' . sha1($email);
+        $ipKey = 'magic-link-ip:' . sha1($request->ip() ?? 'unknown');
 
         // 3 demandes par email/heure, 10 par IP/heure (cf. agent security-namur)
         if (RateLimiter::tooManyAttempts($emailKey, 3) || RateLimiter::tooManyAttempts($ipKey, 10)) {
@@ -52,7 +53,7 @@ class MagicLinkController extends Controller
             ['email' => $email],
             [
                 'name' => explode('@', $email)[0],
-                'password' => bcrypt(\Illuminate\Support\Str::random(64)),    // jetable, jamais utilise
+                'password' => bcrypt(Str::random(64)),    // jetable, jamais utilise
                 'role' => User::ROLE_MEMBER,
                 'locale' => 'fr',
                 'subscription_tier' => User::TIER_FREE,

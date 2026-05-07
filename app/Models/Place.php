@@ -12,14 +12,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Place extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCity;
+    use BelongsToCity, HasFactory, SoftDeletes;
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_PUBLISHED = 'published';
+
     public const STATUS_ARCHIVED = 'archived';
 
     public const SOURCE_ADMIN = 'admin';
+
     public const SOURCE_OPENDATA = 'opendata';
+
     public const SOURCE_CONTRIBUTION = 'contribution';
 
     protected $fillable = [

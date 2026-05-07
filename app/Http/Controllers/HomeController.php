@@ -24,7 +24,7 @@ class HomeController extends Controller
                 'status',
                 app()->environment('local')
                     ? [Brief::STATUS_DRAFT_AI, Brief::STATUS_PENDING_REVIEW, Brief::STATUS_PUBLISHED]
-                    : [Brief::STATUS_PUBLISHED]
+                    : [Brief::STATUS_PUBLISHED],
             )
             ->orderByDesc('year')
             ->orderByDesc('week_number')

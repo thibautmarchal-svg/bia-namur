@@ -7,6 +7,8 @@ use App\Models\BriefItem;
 use App\Models\City;
 use App\Models\Event;
 use App\Services\Ai\ClaudeApiService;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 beforeEach(function () {
     config()->set('bia.ai.mock_mode', true);
@@ -20,7 +22,7 @@ beforeEach(function () {
     ]);
 
     // Cree 3 events factices pour la semaine ISO 19 de 2026
-    $weekStart = \Carbon\Carbon::now()->setISODate(2026, 19)->startOfWeek();
+    $weekStart = Carbon::now()->setISODate(2026, 19)->startOfWeek();
     foreach (range(1, 3) as $i) {
         Event::create([
             'city_id' => $this->city->id,
@@ -92,5 +94,5 @@ it('fails clearly when the city does not exist', function () {
     $job = new GenerateBriefJob('mons', 2026, 19);
 
     expect(fn () => $job->handle(new ClaudeApiService(mockMode: true)))
-        ->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        ->toThrow(ModelNotFoundException::class);
 });

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PlaceResource\Pages;
+use App\Models\City;
 use App\Models\Place;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -36,7 +37,7 @@ class PlaceResource extends Resource
                         Forms\Components\Select::make('city_id')
                             ->label('Ville')
                             ->relationship('city', 'name')
-                            ->default(fn () => \App\Models\City::where('slug', 'namur')->value('id'))
+                            ->default(fn () => City::where('slug', 'namur')->value('id'))
                             ->required(),
                         Forms\Components\Select::make('type')
                             ->label('Type')

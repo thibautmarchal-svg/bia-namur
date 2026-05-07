@@ -26,6 +26,7 @@ const placesArray = props.highlightPlaces?.data ?? props.highlightPlaces ?? [];
             <EditorialHero
                 :eyebrow="`Brief de la semaine ${brief.year}-W${String(brief.week_number).padStart(2, '0')}`"
                 :title="brief.title"
+                :photo="brief.cover_photo"
             >
                 <template #intro>
                     <p class="prose-bia text-lg max-w-reading">{{ brief.intro_text }}</p>

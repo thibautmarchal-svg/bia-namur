@@ -11,16 +11,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Story extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCity;
+    use BelongsToCity, HasFactory, SoftDeletes;
 
     public const TYPE_PLACE = 'place';
+
     public const TYPE_TRADITION = 'tradition';
+
     public const TYPE_WALLON = 'wallon';
+
     public const TYPE_PATRIMOINE = 'patrimoine';
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_PENDING_REVIEW = 'pending_review';
+
     public const STATUS_PUBLISHED = 'published';
+
     public const STATUS_ARCHIVED = 'archived';
 
     protected $fillable = [

@@ -10,7 +10,9 @@ class Entitlement extends Model
     use HasFactory;
 
     public const TIER_FREE = 'free';
+
     public const TIER_PLUS = 'plus';
+
     public const TIER_PATRON = 'patron';
 
     protected $fillable = [

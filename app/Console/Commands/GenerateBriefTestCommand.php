@@ -3,11 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Jobs\GenerateBriefJob;
+use App\Models\AiRun;
 use App\Models\Brief;
 use App\Models\City;
 use App\Models\Event;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * Lance le pipeline GenerateBriefJob en local pour tester sans queue.
@@ -56,14 +58,14 @@ class GenerateBriefTestCommand extends Command
             ->count();
 
         $this->components->info("Events disponibles cette semaine : {$eventsCount}");
-        $this->components->info('Mode mock : '.(config('bia.ai.mock_mode') ? 'OUI (fixtures)' : 'NON (vrai SDK)'));
+        $this->components->info('Mode mock : ' . (config('bia.ai.mock_mode') ? 'OUI (fixtures)' : 'NON (vrai SDK)'));
 
         $job = new GenerateBriefJob(citySlug: $citySlug, year: $year, weekNumber: $week);
 
         try {
             $brief = app()->call([$job, 'handle']);
         } catch (\Throwable $e) {
-            $this->components->error('Echec : '.$e->getMessage());
+            $this->components->error('Echec : ' . $e->getMessage());
 
             return self::FAILURE;
         }
@@ -72,19 +74,19 @@ class GenerateBriefTestCommand extends Command
         $this->components->info("Brief cree : id={$brief->id}, slug={$brief->slug}, status={$brief->status}");
         $this->components->bulletList([
             "Titre : {$brief->title}",
-            "Intro : ".\Illuminate\Support\Str::limit($brief->intro_text ?? '', 100),
-            'Items : '.$brief->items()->count(),
+            'Intro : ' . Str::limit($brief->intro_text ?? '', 100),
+            'Items : ' . $brief->items()->count(),
         ]);
 
         $this->newLine();
         $this->line('<fg=yellow>--- Apercu items ---</>');
         foreach ($brief->items()->orderBy('position')->get() as $item) {
-            $this->line("  <fg=cyan>{$item->position}.</> ".\Illuminate\Support\Str::limit($item->ai_text, 120));
+            $this->line("  <fg=cyan>{$item->position}.</> " . Str::limit($item->ai_text, 120));
         }
 
         $this->newLine();
         $this->components->info('Verifie la trace dans la table ai_runs :');
-        $aiRun = \App\Models\AiRun::latest('id')->first();
+        $aiRun = AiRun::latest('id')->first();
         if ($aiRun) {
             $this->components->bulletList([
                 "type={$aiRun->type}",

@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Event extends Model
 {
-    use HasFactory, BelongsToCity;
+    use BelongsToCity, HasFactory;
 
     public const STATUS_INGESTED = 'ingested';
+
     public const STATUS_NORMALIZED = 'normalized';
+
     public const STATUS_SELECTED = 'selected';
+
     public const STATUS_DROPPED = 'dropped';
 
     protected $fillable = [

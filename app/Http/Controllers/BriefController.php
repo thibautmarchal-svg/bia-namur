@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\BriefResource;
 use App\Models\Brief;
 use App\Models\City;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,7 +32,7 @@ class BriefController extends Controller
                 'title' => $b->title,
                 'year' => $b->year,
                 'week_number' => $b->week_number,
-                'intro' => \Illuminate\Support\Str::limit($b->intro_text, 180),
+                'intro' => Str::limit($b->intro_text, 180),
                 'status' => $b->status,
             ])->values(),
         ]);

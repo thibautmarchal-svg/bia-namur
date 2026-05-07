@@ -179,15 +179,84 @@ Pour ajouter une nouvelle photo par défaut :
 
 ---
 
-## Calendrier S1 — état d'avancement
+## ✅ Semaine 1 — bilan complet
 
-- ✅ J1 : Bootstrap Laravel 11 + Inertia + Vue 3 + Tailwind 3.4 (palette Bia) + vite-plugin-pwa + page d'accueil rendue HTTP 200
-- ⏳ J2 : Schéma BDD complet (12 tables) + multi-tenant `BelongsToCity` + seeder city Namur
-- ⏳ J3 : Auth magic link + Filament 3 + Spatie Permission + ressources base
-- ⏳ J4 : Layout app + 3 composants prioritaires + icônes PWA depuis SVG
-- ⏳ J5 : `ClaudeApiService` + `GenerateBriefJob` (mode mock)
-- ⏳ J6 : Pages publiques (lieu, story, carte stub) + 5 places fondateurs + 2 stories rédigées main
-- ⏳ J7 : Pest setup + GitHub Actions CI (lint + test, pas deploy) + dossier BOIP préparé
+| Jour | Livré |
+|---|---|
+| J1 | Bootstrap Laravel 11 + Inertia + Vue 3 + Tailwind 3.4 (palette Bia) + `vite-plugin-pwa` |
+| J1.5 | Audit UX agent + corrections (header sobre, eyebrow namurois, tokens dark mode) |
+| J2 | Schéma BDD complet : 13 migrations, 11 modèles Eloquent + trait `BelongsToCity`, seeders city Namur + entitlements + admin local |
+| J3 | Auth magic link custom (token sha256, 15 min, rate limit) + Filament 3 admin avec brand Bia Namur + 4 ressources (Lieux, Stories, Briefs avec RelationManager items, Contributions) |
+| J4 | Icônes PWA générées via sharp (192/512/maskable/apple-touch + favicons) + 3 composants prioritaires (`<EditorialHero>`, `<PlaceCard>`, `<DataAttribution>`) + page démo `/dev/components` |
+| J4.5 | Fix PWA : `<link rel="manifest">` dans Blade + `registerSW()` dans app.js → installable Chrome OK |
+| J5 | `ClaudeApiService` + `ClaudeCompletion` DTO + `GenerateBriefJob` (mode mock S1) + commande `bia:brief:generate-test` + 12 tests Pest. Pipeline brief hebdo fonctionne en mock avec logging `ai_runs` (cost 0,016 USD/run mocké) |
+| J6 | 10 routes publiques (Home, Briefs, Lieu, Story, Carte stub) + 5 controllers + 4 Resources DTO + 5 lieux fondateurs seedés + 2 stories patrimoine main-écrites + composants `<BriefList>` + `<StoryArticle>` lettrine |
+| J6.5 | Photos par défaut Wikimedia Commons CC + override perso : `App\Support\PhotoResolver` + `<PhotoCredit>` + 3 photos optimisées (Citadelle, Cathédrale, Confluent) avec variantes WebP 800/1600 |
+| J7 | Tests Pest élargis (39 tests / 249 assertions verts) + Laravel Pint + GitHub Actions CI (lint + test MySQL 8 + build Vite) + dossier BOIP préparé + bilan S1 + handoff S2 |
+
+### Livrables S1
+- **Repo GitHub** `bia-namur` avec `main` propre, 12 commits cohérents
+- **App Laravel** fonctionnelle sur `http://127.0.0.1:8000` avec :
+  - Brief 2026-W19 visible avec photo + 6 items en mode mock
+  - 5 lieux fondateurs avec photos CC sourcées
+  - 2 stories patrimoine avec lettrines ambrées
+  - Page carte stub + liste lieux géolocalisés
+- **Filament admin** sur `/admin` avec magic link auth, 4 ressources, palette ambré custom
+- **Tests Pest** : 39 tests, 249 assertions, BDD `bia_namur_testing` dédiée
+- **CI GitHub Actions** prêt : lint Pint + Pest + build Vite + manifest check
+- **PWA** installable Chrome, manifest + SW + icônes maskable
+- **Système photos** 2 niveaux (override perso / défauts Wikimedia)
+- **Dossier BOIP** prêt à déposer : `BOIP-DOSSIER.md`
+
+---
+
+## ➡️ Handoff Semaine 2 — priorités
+
+### Bloc 1 — Activation Claude réel (à faire en premier)
+Le SDK `anthropic-ai/sdk` est installé et le `ClaudeApiService` a un `callApi()` stub qui throw. À implémenter :
+1. Brancher le client SDK dans `callApi()` avec retry 3x + backoff exponentiel selon `config('bia.ai.max_retries')`
+2. Timeout 60s configurable
+3. Extraction text + `usage.input_tokens` + `usage.output_tokens` du payload Anthropic
+4. **Tester en local avec un seul appel** sur 1 brief réel pour valider le ton avant de désactiver le mock
+5. Bascule progressive : `BIA_AI_MOCK_MODE=false` en local d'abord, puis en staging quand on l'aura
+
+### Bloc 2 — Carte Maplibre fonctionnelle
+La page `/carte` est actuellement un stub. À faire :
+1. `npm install maplibre-gl` + composant `<MapView>` Vue 3
+2. Tiles : commencer avec OSM puis basculer MapTiler si besoin de style custom (clé MapTiler gratuite jusqu'à 100k tiles/mois)
+3. Style custom Bia : palette ambré/crème/encre via JSON style Maplibre
+4. Marqueurs : pin ambré custom avec icône type de lieu
+5. Popup compact au clic : photo miniature + nom + bouton "voir la fiche"
+6. Filtres : type, quartier, mood (chips au-dessus de la carte)
+7. Geolocation API : "autour de moi" avec consentement explicite
+
+### Bloc 3 — Pipelines ingestion sources externes
+Le brief §7.1 décrit l'orchestration. À développer :
+- `App\Services\Ingestion\OpenDataNamurService` — wrapper API `data.namur.be`
+- `App\Services\Ingestion\RssIngestService` — feeds Le Delta, Belvédère, Théâtre Royal, KIKK, Citadelle, MCN
+- `App\Jobs\IngestSourcesJob` (orchestrator hourly) + sub-jobs par source
+- `App\Jobs\NormalizeEventsJob` : dédoublonnage (similarity 0.85), géocodage Nominatim, catégorisation
+- Scheduler dans `routes/console.php` : ingestion horaire + brief vendredi 14h + auto-publish lundi 09h si pas relu
+
+### Bloc 4 — Frontend pages restantes
+- Form de contribution `/contribuer` + `App\Jobs\ModerateContributionJob` (pipeline IA dédié) + intégration Filament
+- Page `/wallon` dédiée vocabulaire wallon namurois (cf. brief annexe C + `config/bia.php` `wallon`)
+- Page `/a-propos` avec tagline + valeurs + équipe
+- Pages légales : Mentions légales, CGU, Politique de confidentialité (cf. brief §14)
+
+### Bloc 5 — Achats & comptes (admin perso)
+- [ ] Acheter `bianamur.be` + `bianamur.app` + `bianamur.eu` (registrar Gandi/OVH)
+- [ ] Déposer marque BOIP (cf. `BOIP-DOSSIER.md`)
+- [ ] Créer comptes Cloudflare (proxy + R2) + Sentry + Plausible + provider SMTP (Mailgun/Postmark)
+- [ ] Choisir hébergement mutualisé final (PHP 8.3 + MySQL 8 confirmés)
+- [ ] Compléter `secrets-bia-namur.md` au fur et à mesure
+
+### Bloc 6 — S3 (déploiement)
+Rien à faire en S2 sur le déploiement. L'agent `deployment-namur` (currently standby) prend le relais en S3 avec le workflow GH Actions FTP qui injectera les secrets via `sed` ancré.
+
+---
+
+## Calendrier S1 (clos)
 
 ---
 
