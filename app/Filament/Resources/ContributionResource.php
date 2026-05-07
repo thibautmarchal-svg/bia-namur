@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContributionResource\Pages;
+use App\Mail\ContributionDecisionMail;
 use App\Models\City;
 use App\Models\Contribution;
 use App\Models\Photo;
@@ -15,6 +16,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
@@ -218,6 +221,42 @@ class ContributionResource extends Resource
                         self::approveAndCreatePlace($record);
                     }),
 
+                Tables\Actions\Action::make('request_changes')
+                    ->label('Demander précision')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('warning')
+                    ->visible(fn (Contribution $record) => in_array(
+                        $record->status,
+                        [Contribution::STATUS_PENDING, Contribution::STATUS_MANUAL_REVIEW, Contribution::STATUS_AUTO_APPROVED],
+                        true,
+                    ))
+                    ->form([
+                        Forms\Components\Textarea::make('reviewer_note_visible')
+                            ->label('Mot pour le contributeur (apparait dans l\'email)')
+                            ->required()
+                            ->rows(4)
+                            ->placeholder('Pourrais-tu nous redonner l\'adresse exacte ? On a un doute sur le numéro de rue.'),
+                    ])
+                    ->action(function (Contribution $record, array $data): void {
+                        $record->update([
+                            'status' => Contribution::STATUS_MANUAL_REVIEW,
+                            'reviewer_notes' => $data['reviewer_note_visible'],
+                            'reviewer_id' => auth()->id(),
+                            'reviewed_at' => now(),
+                        ]);
+                        self::sendDecisionEmail(
+                            $record,
+                            ContributionDecisionMail::DECISION_NEEDS_CHANGES,
+                            null,
+                            $data['reviewer_note_visible'],
+                        );
+                        Notification::make()
+                            ->title('Contributeur prevenu')
+                            ->body('Email envoyé avec la demande de précision.')
+                            ->success()
+                            ->send();
+                    }),
+
                 Tables\Actions\Action::make('reject')
                     ->label('Rejeter')
                     ->icon('heroicon-m-x-circle')
@@ -226,8 +265,16 @@ class ContributionResource extends Resource
                         && $record->status !== Contribution::STATUS_MERGED)
                     ->form([
                         Forms\Components\Textarea::make('reviewer_notes')
-                            ->label('Note (optionnelle, visible en interne)')
-                            ->rows(3),
+                            ->label('Note interne (non envoyée au contributeur)')
+                            ->rows(2),
+                        Forms\Components\Textarea::make('reviewer_note_visible')
+                            ->label('Mot visible dans l\'email (optionnel)')
+                            ->rows(3)
+                            ->placeholder('Cette suggestion fait double emploi avec un lieu déjà publié.'),
+                        Forms\Components\Toggle::make('notify_user')
+                            ->label('Envoyer un email au contributeur')
+                            ->default(true)
+                            ->helperText('Décocher pour rejeter en silence (spam, contenu offensant)'),
                     ])
                     ->action(function (Contribution $record, array $data): void {
                         $record->update([
@@ -236,6 +283,14 @@ class ContributionResource extends Resource
                             'reviewer_id' => auth()->id(),
                             'reviewed_at' => now(),
                         ]);
+                        if ($data['notify_user'] ?? true) {
+                            self::sendDecisionEmail(
+                                $record,
+                                ContributionDecisionMail::DECISION_REJECTED,
+                                null,
+                                $data['reviewer_note_visible'] ?? null,
+                            );
+                        }
                         Notification::make()
                             ->title('Contribution rejetée')
                             ->success()
@@ -245,6 +300,48 @@ class ContributionResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->label('Détails'),
             ]);
+    }
+
+    /**
+     * Envoie le mail de decision au contributeur si un email est trouvable
+     * (compte user OU contributor_email dans payload). Si rien : on log et
+     * on continue silencieusement, le moderateur n'a pas a savoir.
+     */
+    protected static function sendDecisionEmail(
+        Contribution $contribution,
+        string $decision,
+        ?Place $place = null,
+        ?string $reviewerNote = null,
+    ): void {
+        $recipient = ContributionDecisionMail::recipientFor($contribution);
+        if (! $recipient) {
+            Log::channel('moderation')->info('contribution.decision_email_skipped_no_address', [
+                'contribution_id' => $contribution->id,
+                'decision' => $decision,
+            ]);
+
+            return;
+        }
+
+        try {
+            Mail::to($recipient)->send(new ContributionDecisionMail(
+                contribution: $contribution,
+                decision: $decision,
+                place: $place,
+                reviewerNote: $reviewerNote,
+            ));
+            Log::channel('moderation')->info('contribution.decision_email_sent', [
+                'contribution_id' => $contribution->id,
+                'decision' => $decision,
+                'recipient_hash' => sha1($recipient),
+            ]);
+        } catch (\Throwable $e) {
+            Log::channel('moderation')->error('contribution.decision_email_failed', [
+                'contribution_id' => $contribution->id,
+                'decision' => $decision,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -303,9 +400,19 @@ class ContributionResource extends Resource
             'reviewed_at' => now(),
         ]);
 
+        // Email contributeur : "ta suggestion a ete retenue".
+        // Le lieu est en draft, donc placeUrl null → message "on finalise les details".
+        // Quand l'admin publiera le Place, il pourra renvoyer un mail manuel ou
+        // on pourra ajouter un observer plus tard.
+        self::sendDecisionEmail(
+            $contribution,
+            ContributionDecisionMail::DECISION_APPROVED,
+            $place,
+        );
+
         Notification::make()
             ->title('Lieu créé en brouillon')
-            ->body("« {$name} » est prêt à être édité.")
+            ->body("« {$name} » est prêt à être édité. Email envoyé au contributeur.")
             ->success()
             ->actions([
                 Action::make('open')
