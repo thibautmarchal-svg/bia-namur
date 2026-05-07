@@ -6,17 +6,25 @@
 :root {
     --bia-bg: #F5EDDC;       /* cream */
     --bia-surface: #FFFFFF;
+    --bia-surface-soft: #F5EDDC;
+    --bia-border: #E8DDC5;
     --bia-text: #1A1410;     /* ink */
+    --bia-text-soft: #4A3F35;
     --bia-text-muted: #8B7E72;
     --bia-accent: #C77F2C;
+    --bia-accent-soft: rgba(199, 127, 44, 0.05);
 }
 
 .dark {
     --bia-bg: #1A1410;       /* ink */
     --bia-surface: #2A2018;  /* ink légèrement plus clair */
+    --bia-surface-soft: #221A14;
+    --bia-border: #3A2E22;
     --bia-text: #F5EDDC;     /* cream */
+    --bia-text-soft: #D6C8AC;
     --bia-text-muted: #8B7E72;
     --bia-accent: #E5A965;   /* primary-lt, plus visible sur fond sombre */
+    --bia-accent-soft: rgba(229, 169, 101, 0.08);
 }
 
 @layer base {
@@ -24,19 +32,24 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
+        background-color: var(--bia-bg);
+        color: var(--bia-text);
+        transition: background-color 200ms ease, color 200ms ease;
     }
 
     body {
-        @apply bg-bia-cream text-bia-ink;
+        background-color: var(--bia-bg);
+        color: var(--bia-text);
     }
 
     h1, h2, h3, h4, h5, h6 {
-        @apply font-serif text-bia-ink;
+        @apply font-serif;
+        color: var(--bia-text);
     }
 
     /* Focus visible ambré pour navigation clavier (accessibilité WCAG) */
     *:focus-visible {
-        outline: 2px solid #C77F2C;
+        outline: 2px solid var(--bia-accent);
         outline-offset: 2px;
         border-radius: 0.25rem;
     }
@@ -45,6 +58,12 @@
     ::selection {
         background-color: #E5A965;
         color: #1A1410;
+    }
+
+    /* Mode sombre : selection adaptee */
+    .dark ::selection {
+        background-color: #C77F2C;
+        color: #F5EDDC;
     }
 }
 
@@ -56,6 +75,13 @@
     .btn-ghost {
         @apply inline-flex items-center justify-center rounded-card px-5 py-3 text-bia-ink-soft hover:text-bia-ink hover:bg-bia-cream-dk transition-colors;
     }
+    .dark .btn-ghost {
+        color: var(--bia-text-soft);
+    }
+    .dark .btn-ghost:hover {
+        background-color: var(--bia-surface-soft);
+        color: var(--bia-text);
+    }
 
     .container-editorial {
         @apply mx-auto px-6 sm:px-8 max-w-3xl;
@@ -64,4 +90,48 @@
     .prose-bia {
         @apply max-w-reading text-body text-bia-ink-soft;
     }
+    .dark .prose-bia {
+        color: var(--bia-text-soft);
+    }
+}
+
+/*
+| Mode sombre : overrides sur les classes Tailwind les plus utilisees.
+| On ne veut pas saupoudrer 200 dark:bg-... partout dans les composants —
+| ces overrides centralises font le boulot pour 95% des cas.
+*/
+.dark .bg-white {
+    background-color: var(--bia-surface) !important;
+}
+.dark .bg-bia-cream {
+    background-color: var(--bia-bg) !important;
+}
+.dark .bg-bia-cream-dk\/40,
+.dark .bg-bia-cream-dk\/20,
+.dark .bg-bia-cream-dk\/70 {
+    background-color: var(--bia-surface-soft) !important;
+}
+.dark .bg-bia-cream-dk {
+    background-color: var(--bia-border) !important;
+}
+.dark .text-bia-ink {
+    color: var(--bia-text) !important;
+}
+.dark .text-bia-ink-soft {
+    color: var(--bia-text-soft) !important;
+}
+.dark .text-bia-ink-mute {
+    color: var(--bia-text-muted) !important;
+}
+.dark .border-bia-cream-dk {
+    border-color: var(--bia-border) !important;
+}
+.dark .text-bia-primary {
+    color: var(--bia-accent);    /* le primary-lt, plus visible sur fond sombre */
+}
+.dark .bg-bia-primary\/5 {
+    background-color: var(--bia-accent-soft) !important;
+}
+.dark .border-bia-primary\/20 {
+    border-color: rgba(229, 169, 101, 0.25) !important;
 }

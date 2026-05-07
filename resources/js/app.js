@@ -3,6 +3,11 @@ import './pwa';
 
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
+import { applyStoredTheme } from '@/composables/useDarkMode';
+
+// Applique le theme stocke avant le mount Vue pour eviter un flash
+// blanc puis sombre (FOUC).
+applyStoredTheme();
 
 const appName = import.meta.env.VITE_APP_NAME || 'Bia Namur';
 

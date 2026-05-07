@@ -1,6 +1,7 @@
 <script setup>
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import ThemeToggle from '@/Components/ThemeToggle.vue';
 
 defineProps({
     title: { type: String, default: null },
@@ -55,7 +56,8 @@ const logout = () => router.post('/logout');
                     </Link>
                 </nav>
 
-                <div class="flex items-center gap-3 text-caption shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 text-caption shrink-0">
+                    <ThemeToggle />
                     <template v-if="user">
                         <a
                             v-if="user.is_admin"
