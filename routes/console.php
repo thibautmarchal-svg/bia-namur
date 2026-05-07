@@ -2,6 +2,7 @@
 
 use App\Jobs\GenerateBriefJob;
 use App\Jobs\IngestOpenDataJob;
+use App\Jobs\IngestRssJob;
 use App\Jobs\NormalizeEventsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -27,14 +28,21 @@ Artisan::command('inspire', function () {
 |    'bia:brief:generate-test' a la demande.
 */
 
-// Ingestion OpenData Namur — toutes les heures, sans overlap
+// Ingestion OpenData Namur — toutes les heures pile, sans overlap
 Schedule::job(new IngestOpenDataJob('namur'))
     ->name('ingest:opendata-namur')
     ->hourly()
     ->withoutOverlapping()
     ->onOneServer();
 
-// Normalisation des events ingerés — 15min après ingest, sans overlap
+// Ingestion RSS feeds (Le Delta, Belvedere, Theatre Royal) — HH:05
+Schedule::job(new IngestRssJob('namur'))
+    ->name('ingest:rss')
+    ->hourlyAt(5)
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Normalisation des events ingerés — HH:15, apres les 2 ingestions
 Schedule::job(new NormalizeEventsJob('namur'))
     ->name('events:normalize')
     ->hourlyAt(15)

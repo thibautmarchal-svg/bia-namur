@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+    <channel>
+        <title>Theatre Royal de Namur — programmation</title>
+        <link>https://www.theatredenamur.be</link>
+        <description>Programmation officielle du Theatre Royal de Namur</description>
+        <language>fr-BE</language>
+
+        <item>
+            <title>Le voyage de Bia — spectacle jeunesse</title>
+            <link>https://www.theatredenamur.be/spectacles/voyage-de-bia</link>
+            <guid>tr-2026-spectacle-jeunesse-bia</guid>
+            <description><![CDATA[Conte musical pour les 4-8 ans. Creation namuroise originale.]]></description>
+            <pubDate>Sat, 02 May 2026 10:00:00 +0200</pubDate>
+            <category>famille</category>
+            <eventDate>2026-05-12T14:00:00+02:00</eventDate>
+        </item>
+
+        <item>
+            <title>Andromaque, mise en scene contemporaine</title>
+            <link>https://www.theatredenamur.be/spectacles/andromaque</link>
+            <guid>tr-2026-andromaque</guid>
+            <description><![CDATA[La tragedie de Racine relue par une compagnie bruxelloise. Quatre representations.]]></description>
+            <pubDate>Sun, 03 May 2026 11:00:00 +0200</pubDate>
+            <category>theatre</category>
+            <eventDate>2026-05-20T20:00:00+02:00</eventDate>
+        </item>
+
+        <item>
+            <title>Stand-up : Fanny Ruwet</title>
+            <link>https://www.theatredenamur.be/spectacles/fanny-ruwet</link>
+            <guid>tr-2026-ruwet</guid>
+            <description><![CDATA[Nouveau spectacle de l'humoriste belge sur la peur de devenir adulte.]]></description>
+            <pubDate>Mon, 04 May 2026 09:30:00 +0200</pubDate>
+            <category>humour</category>
+            <eventDate>2026-05-23T20:30:00+02:00</eventDate>
+        </item>
+    </channel>
+</rss>

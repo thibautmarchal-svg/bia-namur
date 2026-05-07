@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>Le Delta — agenda</title>
+        <link>https://www.ledelta.be/agenda</link>
+        <description>L'agenda du Delta, espace culturel provincial de Namur</description>
+        <language>fr-BE</language>
+        <copyright>Province de Namur</copyright>
+
+        <item>
+            <title>Sweet Lord Trio — jazz dans la cave</title>
+            <link>https://www.ledelta.be/agenda/sweet-lord-trio-2026</link>
+            <guid isPermaLink="false">delta-evt-1024</guid>
+            <description><![CDATA[Reprises de standards jazz dans la cave voutee du Delta. 80 places, configuration acoustique seche.]]></description>
+            <pubDate>Mon, 04 May 2026 09:00:00 +0200</pubDate>
+            <dc:date>2026-05-16T21:00:00+02:00</dc:date>
+            <category>concert</category>
+        </item>
+
+        <item>
+            <title>Vernissage : Imaginaires de Wallonie</title>
+            <link>https://www.ledelta.be/agenda/imaginaires-wallonie</link>
+            <guid isPermaLink="false">delta-evt-1031</guid>
+            <description><![CDATA[Exposition collective de 12 artistes wallons. Vernissage avec verre de l'amitie.]]></description>
+            <pubDate>Tue, 05 May 2026 14:00:00 +0200</pubDate>
+            <dc:date>2026-05-22T18:30:00+02:00</dc:date>
+            <category>exposition</category>
+        </item>
+
+        <item>
+            <title>Conference : la Sambre et ses anguilles</title>
+            <link>https://www.ledelta.be/agenda/sambre-anguilles</link>
+            <guid isPermaLink="false">delta-evt-1042</guid>
+            <description><![CDATA[Un biologiste de l'UNamur retrace la presence des anguilles dans la Sambre, du 19e siecle a aujourd'hui.]]></description>
+            <pubDate>Wed, 06 May 2026 10:00:00 +0200</pubDate>
+            <dc:date>2026-05-19T19:00:00+02:00</dc:date>
+            <category>conférence</category>
+        </item>
+
+        <item>
+            <title>Concert : Carmen, version chambre</title>
+            <link>https://www.ledelta.be/agenda/carmen-chambre</link>
+            <guid isPermaLink="false">delta-evt-1058</guid>
+            <description><![CDATA[Carmen revisite par un quintet a cordes namurois. Reservation conseillee.]]></description>
+            <pubDate>Thu, 07 May 2026 11:30:00 +0200</pubDate>
+            <dc:date>2026-05-24T20:00:00+02:00</dc:date>
+            <category>concert</category>
+        </item>
+    </channel>
+</rss>

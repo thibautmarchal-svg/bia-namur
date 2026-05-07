@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>Belvedere Namur — agenda</title>
+    <link href="https://www.belvedere-namur.be/agenda" />
+    <updated>2026-05-07T08:00:00+02:00</updated>
+    <id>tag:belvedere-namur.be,2026:agenda</id>
+    <author>
+        <name>Belvedere Namur</name>
+    </author>
+
+    <entry>
+        <title>Soiree DJ : techno house</title>
+        <link href="https://www.belvedere-namur.be/agenda/dj-techno-house" />
+        <id>tag:belvedere-namur.be,2026:dj-1023</id>
+        <updated>2026-05-06T12:00:00+02:00</updated>
+        <published>2026-05-15T22:00:00+02:00</published>
+        <summary>Set de 22h a 4h du matin avec deux DJ namurois.</summary>
+        <category term="electro" />
+    </entry>
+
+    <entry>
+        <title>Lecture musicale : Verlaine et Verlaine</title>
+        <link href="https://www.belvedere-namur.be/agenda/verlaine" />
+        <id>tag:belvedere-namur.be,2026:lecture-1024</id>
+        <updated>2026-05-07T09:00:00+02:00</updated>
+        <published>2026-05-18T19:00:00+02:00</published>
+        <summary>Lecture des poemes de Verlaine accompagnee au piano. Cave voutee, 60 places.</summary>
+        <category term="culture" />
+    </entry>
+
+    <entry>
+        <title>Concert tribute : Pink Floyd</title>
+        <link href="https://www.belvedere-namur.be/agenda/pink-floyd-tribute" />
+        <id>tag:belvedere-namur.be,2026:concert-1025</id>
+        <updated>2026-05-07T10:00:00+02:00</updated>
+        <published>2026-05-21T21:30:00+02:00</published>
+        <summary>Quatre musiciens namurois reprennent Dark Side of the Moon en integralite.</summary>
+        <category term="concert" />
+    </entry>
+</feed>

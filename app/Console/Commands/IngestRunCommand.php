@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Jobs\IngestOpenDataJob;
+use App\Jobs\IngestRssJob;
 use App\Jobs\NormalizeEventsJob;
 use App\Models\Event;
 use Illuminate\Console\Command;
@@ -36,9 +37,17 @@ class IngestRunCommand extends Command
         $this->components->info("Ville : {$city}");
         $this->newLine();
 
-        // 1. Ingestion
+        // 1a. OpenData Namur
         $this->components->task('Ingestion OpenData Namur', function () use ($city) {
             $job = new IngestOpenDataJob($city);
+            app()->call([$job, 'handle']);
+
+            return true;
+        });
+
+        // 1b. RSS feeds (Delta, Belvedere, Theatre Royal)
+        $this->components->task('Ingestion RSS feeds (Delta, Belvédère, Théâtre Royal)', function () use ($city) {
+            $job = new IngestRssJob($city);
             app()->call([$job, 'handle']);
 
             return true;

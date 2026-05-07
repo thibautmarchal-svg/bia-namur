@@ -52,6 +52,48 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Feeds RSS / Atom des sites culturels namurois
+    |--------------------------------------------------------------------------
+    |
+    | Une cle = un slug source (utilise dans events.source). Chaque feed :
+    |   url             : URL du flux RSS/Atom
+    |   name            : nom human readable affiche dans le dashboard
+    |   venue_default   : lieu pré-rempli si l'item RSS n'a pas de balise lieu
+    |                     (cas frequent : Le Delta publie ses events sans
+    |                     repreciser "au Delta" dans chaque item)
+    |   category_default: categorie pré-remplie idem
+    |   fixture         : nom du snapshot XML local pour le mode fixture_mode
+    |
+    | La feature flag config('bia.sources.{slug}') permet de couper
+    | individuellement chaque feed sans modifier ce fichier.
+    */
+
+    'rss_feeds' => [
+        'rss_delta' => [
+            'name' => 'Le Delta',
+            'url' => env('BIA_RSS_DELTA_URL', 'https://www.ledelta.be/agenda/feed'),
+            'venue_default' => 'Le Delta',
+            'category_default' => 'culture',
+            'fixture' => 'delta.xml',
+        ],
+        'rss_belvedere' => [
+            'name' => 'Belvédère',
+            'url' => env('BIA_RSS_BELVEDERE_URL', 'https://www.belvedere-namur.be/agenda/feed'),
+            'venue_default' => 'Le Belvédère',
+            'category_default' => 'concert',
+            'fixture' => 'belvedere.xml',
+        ],
+        'rss_theatre_royal' => [
+            'name' => 'Théâtre Royal de Namur',
+            'url' => env('BIA_RSS_THEATRE_URL', 'https://www.theatredenamur.be/feed'),
+            'venue_default' => 'Théâtre Royal de Namur',
+            'category_default' => 'theatre',
+            'fixture' => 'theatre-royal.xml',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Categorisation auto par mots-cles (sans Claude)
     |--------------------------------------------------------------------------
     |
