@@ -340,6 +340,23 @@ PROMPT,
 
     /*
     |--------------------------------------------------------------------------
+    | Deploiement (hebergement sans SSH)
+    |--------------------------------------------------------------------------
+    |
+    | Secret partage utilise par GitHub Actions pour appeler les endpoints
+    | /_deploy/migrate, /_deploy/cache, /_deploy/storage-link et
+    | /_deploy/schedule (cron externe).
+    |
+    | A generer via : openssl rand -hex 32
+    | Stocker dans .env (BIA_DEPLOY_SECRET) ET dans GitHub Secrets.
+    */
+
+    'deploy' => [
+        'secret' => env('BIA_DEPLOY_SECRET'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Wallon namurois — vocabulaire de base (cf. brief annexe C)
     |--------------------------------------------------------------------------
     */

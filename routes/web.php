@@ -96,3 +96,71 @@ if (app()->environment('local')) {
     Route::get('/dev/components', fn () => Inertia::render('Dev/Components'))
         ->name('dev.components');
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Endpoints de deploiement (hebergement sans SSH)
+// Proteges par BIA_DEPLOY_SECRET (dans .env, jamais commit, generer
+// via `openssl rand -hex 32`). Si le secret est absent : 404 silencieux.
+// Rate-limit serre pour eviter le brute-force.
+// ─────────────────────────────────────────────────────────────────────
+
+Route::post('/_deploy/migrate', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+
+    return response('<pre>'.\Illuminate\Support\Facades\Artisan::output().'</pre>')
+        ->header('Content-Type', 'text/html; charset=utf-8');
+})->middleware('throttle:3,60');
+
+Route::post('/_deploy/cache', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $output = '';
+    foreach (['config:cache', 'route:cache', 'view:cache', 'event:cache'] as $cmd) {
+        \Illuminate\Support\Facades\Artisan::call($cmd);
+        $output .= "[$cmd]\n".\Illuminate\Support\Facades\Artisan::output()."\n";
+    }
+
+    // Reset OPcache pour que le nouveau code soit pris en compte (alternative
+    // au reload PHP-FPM qui necessite sudo).
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+        $output .= "[opcache_reset] OK\n";
+    }
+
+    return response('<pre>'.e($output).'</pre>')
+        ->header('Content-Type', 'text/html; charset=utf-8');
+})->middleware('throttle:3,60');
+
+Route::post('/_deploy/storage-link', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('storage:link');
+
+    return response('<pre>'.\Illuminate\Support\Facades\Artisan::output().'</pre>')
+        ->header('Content-Type', 'text/html; charset=utf-8');
+})->middleware('throttle:3,60');
+
+// Endpoint scheduler pour cron externe (cron-job.org ou EasyCron).
+// Appele toutes les minutes via POST avec le secret. Laravel decide
+// lui-meme si une tache doit s'executer a ce moment.
+Route::post('/_deploy/schedule', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('schedule:run');
+
+    return response()->json(['ran' => true, 'output' => \Illuminate\Support\Facades\Artisan::output()]);
+})->middleware('throttle:120,1');

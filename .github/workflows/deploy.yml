@@ -1,12 +1,11 @@
-name: Deploy production (CBlue VM)
+name: Deploy to bianamur.be
 
-# Déclenché uniquement quand le CI passe sur main, OU manuellement.
-# Stratégie : build local sur le runner, rsync over SSH vers la VM Debian.
+# Strategie : build local sur le runner GitHub, FTP-deploy vers
+# l'hebergement mutualise. Migrations + cache via endpoints HTTP
+# proteges par BIA_DEPLOY_SECRET (pas de SSH disponible).
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
+  push:
     branches: [main]
   workflow_dispatch:
 
@@ -16,31 +15,18 @@ concurrency:
 
 jobs:
   deploy:
-    name: Build + rsync + migrate
+    name: Build + FTP + post-deploy hooks
     runs-on: ubuntu-latest
-
-    # Skip si le CI a échoué (sauf en workflow_dispatch manuel)
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-
-    env:
-      DEPLOY_HOST: 193.104.37.156
-      DEPLOY_USER: ${{ secrets.SSH_USER }}
-      DEPLOY_PORT: ${{ secrets.SSH_PORT }}
-      DEPLOY_PATH: /var/www/bianamur.be
-      PHP_VERSION: '8.4'
-      NODE_VERSION: '20'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ─────────────────────────────────────────────────────────────
-      # 1) Build PHP (composer prod, autoload optimisé)
-      # ─────────────────────────────────────────────────────────────
-      - name: Setup PHP ${{ env.PHP_VERSION }}
+      # ─── PHP + Composer ───────────────────────────────────────────────
+      - name: Setup PHP 8.4
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.PHP_VERSION }}
+          php-version: '8.4'
           extensions: mbstring, intl, gd, mysql, pdo_mysql, zip, exif, fileinfo, bcmath, openssl, dom, curl
           tools: composer:v2
           coverage: none
@@ -52,230 +38,162 @@ jobs:
           key: composer-prod-${{ hashFiles('composer.lock') }}
           restore-keys: composer-prod-
 
-      - name: Composer install (prod, optimisé, classmap-authoritative)
+      - name: Composer install (prod)
         run: |
           composer install \
             --no-dev \
             --optimize-autoloader \
             --classmap-authoritative \
             --no-interaction \
-            --prefer-dist \
-            --no-progress
+            --no-progress \
+            --ignore-platform-reqs
 
-      # ─────────────────────────────────────────────────────────────
-      # 2) Build Vite (génère public/build/, manifest, SW PWA)
-      # ─────────────────────────────────────────────────────────────
-      - name: Setup Node ${{ env.NODE_VERSION }}
+      # ─── Node + npm ───────────────────────────────────────────────────
+      - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'npm'
 
       - name: npm ci
-        run: npm ci --no-audit --no-fund
+        run: npm ci
 
-      - name: Vite build (production)
+      # ─── Generation du .env de prod ─────────────────────────────────────
+      # On cree un .env complet a partir des GitHub Secrets, qui sera
+      # uploade tel quel via FTP. Vite a besoin de certaines vars (VITE_*)
+      # AVANT le build, donc on cree le .env d'abord.
+      - name: Generate production .env
+        run: |
+          cat > .env <<EOF
+          APP_NAME="Bia Namur"
+          APP_ENV=production
+          APP_KEY=${{ secrets.APP_KEY }}
+          APP_DEBUG=false
+          APP_TIMEZONE=Europe/Brussels
+          APP_URL=${{ secrets.APP_URL }}
+          APP_LOCALE=fr
+          APP_FALLBACK_LOCALE=fr
+          APP_FAKER_LOCALE=fr_BE
+
+          LOG_CHANNEL=stack
+          LOG_LEVEL=warning
+
+          DB_CONNECTION=mysql
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=3306
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+          SESSION_DRIVER=database
+          SESSION_LIFETIME=120
+          SESSION_DOMAIN=${{ secrets.SESSION_DOMAIN }}
+
+          QUEUE_CONNECTION=database
+          CACHE_STORE=database
+
+          MAIL_MAILER=${{ secrets.MAIL_MAILER }}
+          MAIL_HOST=${{ secrets.MAIL_HOST }}
+          MAIL_PORT=${{ secrets.MAIL_PORT }}
+          MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          MAIL_ENCRYPTION=${{ secrets.MAIL_ENCRYPTION }}
+          MAIL_FROM_ADDRESS=contact@bianamur.be
+          MAIL_FROM_NAME="Bia Namur"
+
+          BIA_AI_MOCK_MODE=false
+          ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+
+          BIA_PUSH_ENABLED=true
+          BIA_PUSH_FAKE=false
+          BIA_VAPID_PUBLIC_KEY=${{ secrets.BIA_VAPID_PUBLIC_KEY }}
+          BIA_VAPID_PRIVATE_KEY=${{ secrets.BIA_VAPID_PRIVATE_KEY }}
+          BIA_VAPID_SUBJECT=mailto:contact@bianamur.be
+
+          BIA_CLOUDFLARE_BEACON_TOKEN=${{ secrets.BIA_CLOUDFLARE_BEACON_TOKEN }}
+
+          BIA_DEPLOY_SECRET=${{ secrets.BIA_DEPLOY_SECRET }}
+          EOF
+
+      - name: Build frontend (Vite + PWA)
         run: npm run build
 
-      - name: Vérif assets PWA générés
-        run: |
-          test -f public/build/manifest.json
-          test -f public/build/manifest.webmanifest
-          test -f public/build/sw.js
-          echo "Assets PWA OK"
-
-      # ─────────────────────────────────────────────────────────────
-      # 3) Génération du .env de production depuis GitHub Secrets
-      # ─────────────────────────────────────────────────────────────
-      - name: Build .env de production depuis le template
-        run: |
-          cp .env.production.example .env
-          # Toutes les substitutions utilisent l'ancre ^ pour éviter les collisions
-          # de substring (ex: VAPID_PUBLIC_KEY vs VITE_VAPID_PUBLIC_KEY).
-
-          sed -i "s|^APP_KEY=.*|APP_KEY=${{ secrets.APP_KEY }}|" .env
-          sed -i "s|^APP_URL=.*|APP_URL=${{ secrets.APP_URL }}|" .env
-
-          sed -i "s|^DB_HOST=.*|DB_HOST=${{ secrets.DB_HOST }}|" .env
-          sed -i "s|^DB_PORT=.*|DB_PORT=${{ secrets.DB_PORT }}|" .env
-          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${{ secrets.DB_DATABASE }}|" .env
-          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${{ secrets.DB_USERNAME }}|" .env
-          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.DB_PASSWORD }}|" .env
-
-          sed -i "s|^MAIL_HOST=.*|MAIL_HOST=${{ secrets.MAIL_HOST }}|" .env
-          sed -i "s|^MAIL_PORT=.*|MAIL_PORT=${{ secrets.MAIL_PORT }}|" .env
-          sed -i "s|^MAIL_USERNAME=.*|MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}|" .env
-          sed -i "s|^MAIL_PASSWORD=.*|MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}|" .env
-          sed -i "s|^MAIL_FROM_ADDRESS=.*|MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}|" .env
-
-          sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}|" .env
-
-          sed -i "s|^BIA_VAPID_PUBLIC_KEY=.*|BIA_VAPID_PUBLIC_KEY=${{ secrets.BIA_VAPID_PUBLIC_KEY }}|" .env
-          sed -i "s|^BIA_VAPID_PRIVATE_KEY=.*|BIA_VAPID_PRIVATE_KEY=${{ secrets.BIA_VAPID_PRIVATE_KEY }}|" .env
-          sed -i "s|^BIA_VAPID_SUBJECT=.*|BIA_VAPID_SUBJECT=${{ secrets.BIA_VAPID_SUBJECT }}|" .env
-          sed -i "s|^VITE_VAPID_PUBLIC_KEY=.*|VITE_VAPID_PUBLIC_KEY=${{ secrets.BIA_VAPID_PUBLIC_KEY }}|" .env
-
-          sed -i "s|^MIGRATE_SECRET=.*|MIGRATE_SECRET=${{ secrets.MIGRATE_SECRET }}|" .env
-
-          sed -i "s|^SENTRY_LARAVEL_DSN=.*|SENTRY_LARAVEL_DSN=${{ secrets.SENTRY_LARAVEL_DSN }}|" .env
-
-          sed -i "s|^R2_ACCESS_KEY_ID=.*|R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}|" .env
-          sed -i "s|^R2_SECRET_ACCESS_KEY=.*|R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}|" .env
-          sed -i "s|^R2_BUCKET=.*|R2_BUCKET=${{ secrets.R2_BUCKET }}|" .env
-          sed -i "s|^R2_ENDPOINT=.*|R2_ENDPOINT=${{ secrets.R2_ENDPOINT }}|" .env
-          sed -i "s|^R2_PUBLIC_URL=.*|R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}|" .env
-
-          sed -i "s|^SESSION_DOMAIN=.*|SESSION_DOMAIN=${{ secrets.SESSION_DOMAIN }}|" .env
-
-          # Vérifier qu'aucun placeholder ${...} ne traîne (sauf MAIL_FROM_NAME qui interpole APP_NAME)
-          if grep -E '^\s*[A-Z_]+=\$\{[A-Z_]+\}\s*$' .env | grep -v '^MAIL_FROM_NAME='; then
-            echo "ERREUR : un placeholder \${VAR} non remplacé dans .env"
-            exit 1
-          fi
-          echo ".env de production généré"
-
-      # ─────────────────────────────────────────────────────────────
-      # 4) Pré-cache Laravel (config/route/view/event)
-      #    On le fait sur le runner pour livrer un app prête à servir.
-      #    APP_KEY + DB_* doivent être présents pour que config:cache
-      #    n'échoue pas, mais on n'accède PAS à la DB ici (queue:work
-      #    et migrate sont faits côté serveur).
-      # ─────────────────────────────────────────────────────────────
-      - name: Laravel optimize (config / route / view / event cache)
+      # ─── Optimize Laravel (caches generes localement, uploades via FTP) ─
+      - name: Optimize Laravel caches
         run: |
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
           php artisan event:cache
-          echo "Caches Laravel générés"
 
-      # ─────────────────────────────────────────────────────────────
-      # 5) SSH agent + known_hosts pour rsync
-      # ─────────────────────────────────────────────────────────────
-      - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+      # ─── FTP Deploy ───────────────────────────────────────────────────
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          # Garde les uploads users + logs deja en place. Skip les fichiers
+          # de dev qui ne servent a rien en prod.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/.env.example
+            **/.env.production.example
+            **/storage/logs/**
+            **/storage/framework/cache/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+            **/storage/app/private/**
+            **/storage/app/public/uploads/**
+            **/scripts/**
+            **/assets-logo/**
+            **/.editorconfig
+            **/.gitignore
+            **/.gitattributes
+            **/phpunit.xml
+            **/pint.json
+            **/postcss.config.js
+            **/tailwind.config.js
+            **/vite.config.js
+            **/CLAUDE.md
+            **/DEPLOYMENT.md
+            **/brief-bia-namur.md
+            **/secrets-bia-namur.md
+            **/README.md
+            **/BOIP-DOSSIER.md
+            **/bianamur_deploy*
 
-      - name: Ajouter host au known_hosts
+      # ─── Post-deploy via endpoints HTTP ───────────────────────────────
+      - name: Run migrations via /_deploy/migrate
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p ${{ env.DEPLOY_PORT }} -H ${{ env.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-          chmod 600 ~/.ssh/known_hosts
+          curl -fsS -X POST \
+            -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
+            "${{ secrets.APP_URL }}/_deploy/migrate" \
+            || (echo "::error::Migration failed" && exit 1)
 
-      # ─────────────────────────────────────────────────────────────
-      # 6) Mode maintenance ON (côté serveur, si app déjà déployée)
-      # ─────────────────────────────────────────────────────────────
-      - name: Maintenance ON (best-effort)
-        continue-on-error: true
+      - name: Refresh caches + opcache via /_deploy/cache
         run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "cd ${{ env.DEPLOY_PATH }} && [ -f artisan ] && php artisan down --render='errors::503' --retry=30 || echo 'pas encore déployé, skip down'"
+          curl -fsS -X POST \
+            -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
+            "${{ secrets.APP_URL }}/_deploy/cache" \
+            || (echo "::warning::Cache refresh failed (non-blocking)")
 
-      # ─────────────────────────────────────────────────────────────
-      # 7) rsync : on synchronise tout sauf ce qui est exclu
-      #    On garde .env distant si présent (--exclude .env) car on
-      #    pousse explicitement le nouveau .env juste après via scp.
-      #    On préserve aussi storage/ pour ne pas écraser les uploads.
-      # ─────────────────────────────────────────────────────────────
-      - name: Rsync vers la VM
-        run: |
-          rsync -avz --delete \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='node_modules' \
-            --exclude='tests' \
-            --exclude='.env' \
-            --exclude='.env.*' \
-            --exclude='.env.production.example' \
-            --exclude='secrets-bia-namur.md' \
-            --exclude='brief-bia-namur.md' \
-            --exclude='BOIP-DOSSIER.md' \
-            --exclude='prompt-demarrage-claude-code.md' \
-            --exclude='DEPLOYMENT.md' \
-            --exclude='CLAUDE.md' \
-            --exclude='README.md' \
-            --exclude='.claude' \
-            --exclude='assets-logo' \
-            --exclude='scripts' \
-            --exclude='storage/app/private/*' \
-            --exclude='storage/logs/*' \
-            --exclude='storage/framework/cache/data/*' \
-            --exclude='storage/framework/sessions/*' \
-            --exclude='storage/framework/views/*' \
-            --exclude='public/storage' \
-            -e "ssh -p ${{ env.DEPLOY_PORT }}" \
-            ./ ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/
-
-      - name: Upload .env de production (scp)
-        run: |
-          scp -P ${{ env.DEPLOY_PORT }} .env \
-            ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/.env
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "chmod 640 ${{ env.DEPLOY_PATH }}/.env"
-
-      # ─────────────────────────────────────────────────────────────
-      # 8) Post-deploy côté serveur : migrations, symlink, caches
-      # ─────────────────────────────────────────────────────────────
       - name: Storage symlink (idempotent)
         run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "cd ${{ env.DEPLOY_PATH }} && php artisan storage:link || true"
+          curl -fsS -X POST \
+            -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
+            "${{ secrets.APP_URL }}/_deploy/storage-link" \
+            || (echo "::warning::Storage symlink already exists or failed (non-blocking)")
 
-      - name: Permissions storage/ + bootstrap/cache
+      # ─── Smoke test ────────────────────────────────────────────────────
+      - name: Smoke test homepage
         run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "cd ${{ env.DEPLOY_PATH }} && \
-             find storage -type d -exec chmod 775 {} \; && \
-             find storage -type f -exec chmod 664 {} \; && \
-             find bootstrap/cache -type d -exec chmod 775 {} \; && \
-             find bootstrap/cache -type f -exec chmod 664 {} \;"
-
-      - name: Migrations production (--force)
-        run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "cd ${{ env.DEPLOY_PATH }} && php artisan migrate --force"
-
-      - name: Re-cache après migrations
-        run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "cd ${{ env.DEPLOY_PATH }} && \
-             php artisan config:cache && \
-             php artisan route:cache && \
-             php artisan view:cache && \
-             php artisan event:cache"
-
-      # ─────────────────────────────────────────────────────────────
-      # 9) Reload PHP-FPM (best-effort, dépend de sudoers côté Christophe)
-      # ─────────────────────────────────────────────────────────────
-      - name: Reload PHP-FPM (si autorisé)
-        continue-on-error: true
-        run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "sudo -n systemctl reload php${{ env.PHP_VERSION }}-fpm 2>/dev/null || \
-             sudo -n /usr/sbin/service php${{ env.PHP_VERSION }}-fpm reload 2>/dev/null || \
-             echo 'reload PHP-FPM non disponible (OPcache ne sera rafraîchi qu après expiration)'"
-
-      # ─────────────────────────────────────────────────────────────
-      # 10) Maintenance OFF
-      # ─────────────────────────────────────────────────────────────
-      - name: Maintenance OFF
-        if: always()
-        run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "cd ${{ env.DEPLOY_PATH }} && php artisan up || true"
-
-      # ─────────────────────────────────────────────────────────────
-      # 11) Smoke test : la home doit répondre 200
-      # ─────────────────────────────────────────────────────────────
-      - name: Smoke test (curl home)
-        run: |
-          URL="${{ secrets.APP_URL }}"
-          echo "Test GET $URL"
-          status=$(curl -o /dev/null -s -w "%{http_code}" -L --max-time 30 "$URL")
-          echo "HTTP $status"
-          if [ "$status" != "200" ] && [ "$status" != "302" ]; then
-            echo "Smoke test FAIL"
-            exit 1
-          fi
-          echo "Smoke test OK"
+          curl -fsS -I "${{ secrets.APP_URL }}/" \
+            | head -5 \
+            && echo "Homepage OK" \
+            || (echo "::error::Homepage smoke test failed" && exit 1)
