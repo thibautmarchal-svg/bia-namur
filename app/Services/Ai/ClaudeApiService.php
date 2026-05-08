@@ -2,6 +2,10 @@
 
 namespace App\Services\Ai;
 
+use Anthropic\Client;
+use Anthropic\Core\Exceptions\APIException;
+use Anthropic\Messages\Message;
+use Anthropic\Messages\TextBlock;
 use App\Models\AiRun;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -13,9 +17,9 @@ use Throwable;
  *
  * Comportement controle par config('bia.ai.mock_mode') :
  *  - mock_mode = true : retourne des fixtures depuis tests/Fixtures/claude/.
- *    Aucun appel reseau, aucun cout. Utilise en S1 + tests automatises.
- *  - mock_mode = false : appel reel via le SDK anthropic-ai/sdk.
- *    A activer en S2+ une fois les fixtures de regression validees.
+ *    Aucun appel reseau, aucun cout.
+ *  - mock_mode = false : appel reel via le SDK anthropic-ai/sdk avec
+ *    retry 3x backoff exponentiel + timeout 60s par defaut.
  *
  * Logging systematique dans ai_runs (input/output tokens, cost USD,
  * duration ms, status, error message). Permet :
@@ -31,6 +35,7 @@ class ClaudeApiService
     public function __construct(
         protected ?string $apiKey = null,
         protected bool $mockMode = false,
+        protected ?Client $client = null,
     ) {
         $this->apiKey = $apiKey ?? (string) config('services.anthropic.key', env('ANTHROPIC_API_KEY', ''));
         $this->mockMode = $mockMode || (bool) config('bia.ai.mock_mode', false);
@@ -135,8 +140,12 @@ class ClaudeApiService
 
     /**
      * Appel reel a l'API Anthropic via le SDK.
-     * Implementation effective en S2 — pour S1 on garde le pipeline
-     * complet sur des fixtures pour ne pas consommer de credit.
+     *
+     * - retry/backoff geres par le SDK (config bia.ai.max_retries → maxRetries)
+     * - timeout configurable (bia.ai.timeout_seconds)
+     * - extraction du 1er TextBlock + tokens via Usage typee
+     * - les exceptions APIException montent telles quelles → le caller voit
+     *   le type precis (RateLimitException, AuthenticationException, etc.)
      */
     protected function callApi(array $prompt, string $userMessage, string $model): ClaudeCompletion
     {
@@ -144,14 +153,57 @@ class ClaudeApiService
             throw new RuntimeException('ANTHROPIC_API_KEY manquante. Active le mock_mode ou configure la cle.');
         }
 
-        // TODO(S2) : brancher anthropic-ai/sdk
-        // - retry 3x avec backoff exponentiel (cf. config('bia.ai.max_retries'))
-        // - timeout config('bia.ai.timeout_seconds')
-        // - extraction text + usage.input_tokens + usage.output_tokens
-        throw new RuntimeException(
-            'Appel reel a Anthropic API non encore implemente (S2). ' .
-            'Active BIA_AI_MOCK_MODE=true en local pour utiliser les fixtures.',
+        $client = $this->client ?? new Client(apiKey: $this->apiKey);
+
+        try {
+            /** @var Message $message */
+            $message = $client->messages->create(
+                maxTokens: (int) ($prompt['max_tokens'] ?? 2000),
+                messages: [
+                    ['role' => 'user', 'content' => $userMessage],
+                ],
+                model: $model,
+                system: $prompt['system'],
+                temperature: (float) ($prompt['temperature'] ?? 0.5),
+                requestOptions: [
+                    'maxRetries' => (int) config('bia.ai.max_retries', 3),
+                    'timeout' => (int) config('bia.ai.timeout_seconds', 60),
+                ],
+            );
+        } catch (APIException $e) {
+            throw new RuntimeException(
+                'Anthropic API error: '.$e->getMessage(),
+                $e->getCode(),
+                $e,
+            );
+        }
+
+        $text = $this->extractText($message);
+
+        return new ClaudeCompletion(
+            text: $text,
+            model: (string) $message->model,
+            inputTokens: $message->usage->inputTokens,
+            outputTokens: $message->usage->outputTokens,
+            stopReason: (string) ($message->stopReason ?? 'unknown'),
+            isMock: false,
         );
+    }
+
+    /**
+     * Extrait le texte du 1er TextBlock. Les autres types de blocs
+     * (tool_use, image, etc.) sont ignores ici — nos prompts produisent
+     * uniquement du texte.
+     */
+    protected function extractText(Message $message): string
+    {
+        foreach ($message->content as $block) {
+            if ($block instanceof TextBlock) {
+                return $block->text;
+            }
+        }
+
+        throw new RuntimeException('Aucun bloc TextBlock dans la reponse Anthropic.');
     }
 
     /**
