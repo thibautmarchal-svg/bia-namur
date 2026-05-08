@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
                     class="inline-flex items-center group shrink-0"
                     aria-label="Bia Namur — accueil"
                 >
-                    <img src="/logo.svg" alt="Bia Namur" class="h-10 sm:h-12 w-auto" />
+                    <img src="/logo.svg" alt="Bia Namur" class="h-12 sm:h-14 lg:h-16 w-auto" />
                 </Link>
 
                 <nav class="hidden lg:flex items-center gap-1 lg:gap-2" aria-label="Navigation principale">
