@@ -62,11 +62,10 @@ onBeforeUnmount(() => {
             <div class="container-editorial py-4 lg:py-6 flex items-center justify-between gap-3 lg:gap-4">
                 <Link
                     href="/"
-                    class="inline-flex items-center gap-3 group shrink-0"
+                    class="inline-flex items-center group shrink-0"
                     aria-label="Bia Namur — accueil"
                 >
-                    <img src="/logo.svg" alt="" class="h-9 w-9" />
-                    <span class="font-serif text-h3 font-medium text-bia-ink hidden sm:inline">Bia Namur</span>
+                    <img src="/logo.svg" alt="Bia Namur" class="h-10 sm:h-12 w-auto" />
                 </Link>
 
                 <nav class="hidden lg:flex items-center gap-1 lg:gap-2" aria-label="Navigation principale">
