@@ -20,6 +20,8 @@ secrets-bia-namur.md
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/app/public/*
+/storage/app/private/*
+!/storage/app/private/.gitkeep
 /public/build
 /public/hot
 /public/storage
@@ -58,6 +60,13 @@ _tmp_laravel/
 # Misc
 *.bak
 *.tmp
+
+# Clés SSH de déploiement (générées localement, jamais commitées)
+bianamur_deploy
+bianamur_deploy.pub
+*.pem
+id_rsa*
+id_ed25519*
 
 # Photos backup (originaux Wikimedia, retelechargeables)
 *.original.jpg
