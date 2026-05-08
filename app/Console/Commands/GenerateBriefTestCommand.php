@@ -27,6 +27,7 @@ class GenerateBriefTestCommand extends Command
         {--city=namur : slug de la ville}
         {--year= : annee (defaut : annee courante)}
         {--week= : numero de semaine ISO (defaut : semaine courante)}
+        {--model= : override le modele (ex: claude-haiku-4-5 si Sonnet sature)}
         {--seed-events : injecte 8 events factices pour la semaine}';
 
     protected $description = 'Genere un brief hebdo en local (mode mock par defaut). À l\'aise.';
@@ -60,7 +61,17 @@ class GenerateBriefTestCommand extends Command
         $this->components->info("Events disponibles cette semaine : {$eventsCount}");
         $this->components->info('Mode mock : ' . (config('bia.ai.mock_mode') ? 'OUI (fixtures)' : 'NON (vrai SDK)'));
 
-        $job = new GenerateBriefJob(citySlug: $citySlug, year: $year, weekNumber: $week);
+        $modelOverride = $this->option('model');
+        if ($modelOverride) {
+            $this->components->info("Modele override : {$modelOverride}");
+        }
+
+        $job = new GenerateBriefJob(
+            citySlug: $citySlug,
+            year: $year,
+            weekNumber: $week,
+            modelOverride: $modelOverride,
+        );
 
         try {
             $brief = app()->call([$job, 'handle']);

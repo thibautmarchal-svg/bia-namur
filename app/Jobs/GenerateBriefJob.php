@@ -44,6 +44,7 @@ class GenerateBriefJob implements ShouldQueue
         public readonly string $citySlug,
         public readonly int $year,
         public readonly int $weekNumber,
+        public readonly ?string $modelOverride = null,
     ) {}
 
     public function handle(ClaudeApiService $claude): Brief
@@ -73,6 +74,7 @@ class GenerateBriefJob implements ShouldQueue
         $completion = $claude->complete(
             promptKey: 'brief_v1',
             userMessage: $userPayload,
+            modelOverride: $this->modelOverride,
             logContext: ['related_type' => Brief::class],
         );
 

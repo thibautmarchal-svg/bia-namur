@@ -138,8 +138,8 @@ return [
         ],
 
         'timeout_seconds' => 60,
-        'max_retries' => 3,
-        'retry_initial_delay_ms' => 500,    // backoff exponentiel : 500ms, 1s, 2s
+        'max_retries' => 5,    // bumped pour absorber les 529 overloaded_error sur Sonnet aux heures de pointe
+        'retry_initial_delay_ms' => 500,    // backoff exponentiel : 500ms, 1s, 2s, 4s, 8s
     ],
 
     /*
