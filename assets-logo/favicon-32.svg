@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Favicon 32x32 : silhouette echasseur ULTRA simplifiee (lisible a 16px aussi).
+  On ne garde que les masses essentielles : tete (point), corps, deux echasses
+  longues, plateformes pieds.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Bia Namur">
   <title>Bia Namur</title>
   <rect width="32" height="32" rx="6" fill="#C77F2C"/>
-  <text x="16" y="23" text-anchor="middle" font-family="Lora, Georgia, serif" font-size="22" font-weight="500" fill="#F5EDDC">B</text>
+  <g fill="#F5EDDC">
+    <!-- Tête -->
+    <circle cx="16" cy="6.5" r="1.8"/>
+    <!-- Torse -->
+    <path d="M 13.5 9 L 18.5 9 L 19 14 L 13 14 Z"/>
+    <!-- Bras+stilts gauches -->
+    <rect x="11.5" y="11" width="1.4" height="16" rx="0.5"/>
+    <!-- stilt droite -->
+    <rect x="19.1" y="11" width="1.4" height="16" rx="0.5"/>
+    <!-- Plateforme pieds -->
+    <rect x="9.5" y="15" width="4.5" height="0.9"/>
+    <rect x="18" y="15" width="4.5" height="0.9"/>
+  </g>
 </svg>

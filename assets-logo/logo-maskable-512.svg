@@ -1,9 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bia Namur">
-  <title>Bia Namur — icône maskable</title>
+<!--
+  Version maskable PWA : la silhouette est centree dans la safe zone
+  (cercle de rayon ~205 a partir du centre 256, soit 80% du carre).
+  Fond ambré plein, silhouette en creme.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bia Namur — Échasseur">
+  <title>Bia Namur</title>
+
   <rect width="512" height="512" fill="#C77F2C"/>
-  <text x="256" y="334" text-anchor="middle" font-family="Lora, Georgia, serif" font-size="280" font-weight="500" fill="#F5EDDC">B</text>
-  <circle cx="346" cy="184" r="8" fill="#F5EDDC" opacity="0.7"/>
-  <circle cx="368" cy="170" r="8" fill="#F5EDDC" opacity="0.85"/>
-  <circle cx="365" cy="200" r="8" fill="#F5EDDC"/>
+
+  <g fill="#F5EDDC">
+    <!-- Plume -->
+    <path d="M 270 116 Q 282 108, 288 104 Q 282 118, 272 134 Z"/>
+
+    <!-- Casquette -->
+    <ellipse cx="256" cy="142" rx="30" ry="9"/>
+    <path d="M 230 142 L 230 138 Q 232 130, 256 130 Q 280 130, 282 138 L 282 142 Z"/>
+
+    <!-- Tête -->
+    <circle cx="256" cy="166" r="18"/>
+
+    <!-- Cou -->
+    <rect x="249" y="182" width="14" height="6"/>
+
+    <!-- Torse -->
+    <path d="M 230 190 Q 224 206, 226 254 L 286 254 Q 288 206, 282 190 Q 270 186, 256 186 Q 242 186, 230 190 Z"/>
+
+    <!-- Ceinture -->
+    <rect x="226" y="250" width="60" height="5"/>
+
+    <!-- Culotte -->
+    <path d="M 226 256 Q 220 274, 226 294 L 252 294 Q 252 274, 252 256 Z"/>
+    <path d="M 260 256 L 286 256 Q 292 274, 286 294 L 260 294 Z"/>
+
+    <!-- Bras tenant les echasses -->
+    <path d="M 228 200 L 200 230 L 210 240 L 236 212 Z"/>
+    <path d="M 284 200 L 312 230 L 302 240 L 276 212 Z"/>
+
+    <!-- Échasses (longues vers le bas) -->
+    <path d="M 196 224 L 208 224 L 212 422 L 200 422 Z"/>
+    <path d="M 304 224 L 316 224 L 312 422 L 300 422 Z"/>
+
+    <!-- Plateformes pieds -->
+    <path d="M 184 282 L 222 282 L 220 290 L 186 290 Z"/>
+    <path d="M 290 282 L 328 282 L 326 290 L 292 290 Z"/>
+  </g>
 </svg>
