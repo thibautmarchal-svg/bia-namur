@@ -1,0 +1,25 @@
+# Bia Namur — wrapper hebergement mutualise
+# Le DocumentRoot pointe sur la racine du projet, pas sur public/.
+# On reroute tout vers public/ pour preserver l'arborescence Laravel.
+
+AddHandler application/x-httpd-php84 .php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Exception : laisser passer _extract.php (bootstrap deploiement)
+    RewriteCond %{REQUEST_URI} !^/_extract\.php$
+    # Reroute toutes les autres requetes vers public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Deny access aux fichiers sensibles meme si mod_rewrite tombe
+<FilesMatch "(^\.|\.(env|md|lock|json|log|sql|sh)$|composer\.(json|lock)|artisan)">
+    Require all denied
+</FilesMatch>
+
+# Deny access aux dossiers sensibles (defense en profondeur)
+RedirectMatch 403 /\.git
+RedirectMatch 403 /storage/(framework|logs|app/private)
+RedirectMatch 403 /vendor
+RedirectMatch 403 /tests
+RedirectMatch 403 /bootstrap/cache

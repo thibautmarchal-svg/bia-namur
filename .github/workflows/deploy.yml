@@ -172,7 +172,78 @@ jobs:
           ls -lh _ftp_stage/bia-deploy.tar.gz
           echo "Archive size: $(du -h _ftp_stage/bia-deploy.tar.gz | cut -f1)"
 
-      # ─── FTP upload (1 seule archive, ~50 MB, ~2 min) ─────────────────
+      # ─── Generer l'extractor PHP standalone ──────────────────────────
+      # Pour le 1er deploy ou si Laravel ne tourne pas. Pas de dependance
+      # Laravel : simple PharData::extractTo + chmod + opcache_reset.
+      # Verifie le secret partage via hash_equals (timing-safe).
+      - name: Create standalone PHP extractor
+        env:
+          INJECTED_SECRET: ${{ secrets.BIA_DEPLOY_SECRET }}
+        run: |
+          cat > _ftp_stage/_extract.php <<'PHPEOF'
+          <?php
+          // Bia Namur — Extractor de deploiement standalone (no Laravel deps).
+
+          $expectedSecret = '###BIA_DEPLOY_SECRET###';
+
+          $received = $_POST['secret'] ?? $_GET['secret'] ?? '';
+          if (! $received || ! hash_equals($expectedSecret, $received)) {
+              http_response_code(404);
+              exit;
+          }
+
+          @ini_set('memory_limit', '512M');
+          @set_time_limit(600);
+          header('Content-Type: text/plain; charset=utf-8');
+
+          $archive = __DIR__ . '/bia-deploy.tar.gz';
+          if (! is_file($archive)) {
+              http_response_code(500);
+              echo "ERROR: archive not found\n";
+              exit;
+          }
+
+          echo "Archive : " . filesize($archive) . " bytes\n";
+
+          try {
+              $phar = new \PharData($archive);
+              $phar->extractTo(__DIR__, null, true);
+              echo "Extraction OK\n";
+
+              @unlink($archive);
+              echo "Archive supprimee\n";
+
+              foreach (['storage', 'bootstrap/cache'] as $dir) {
+                  $p = __DIR__ . '/' . $dir;
+                  if (is_dir($p)) {
+                      @chmod($p, 0775);
+                      echo "chmod 775 $dir\n";
+                  }
+              }
+
+              if (function_exists('opcache_reset')) {
+                  opcache_reset();
+                  echo "OPcache reset\n";
+              }
+
+              @unlink(__FILE__);
+              echo "Self-deleted\nDONE\n";
+          } catch (\Throwable $e) {
+              http_response_code(500);
+              echo "FAILED: " . $e->getMessage() . "\n";
+          }
+          PHPEOF
+
+          sed -i "s|###BIA_DEPLOY_SECRET###|$INJECTED_SECRET|g" _ftp_stage/_extract.php
+
+          if grep -q '###BIA_DEPLOY_SECRET###' _ftp_stage/_extract.php; then
+            echo "::error::Secret injection failed"
+            exit 1
+          fi
+          echo "Extractor genere"
+          ls -lh _ftp_stage/
+
+      # ─── FTP upload (archive + extractor, ~50 MB, ~2 min) ─────────────
       - name: Upload archive via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -186,14 +257,17 @@ jobs:
           # Pas d'exclusion necessaire, le local-dir contient juste l'archive
           dangerous-clean-slate: false
 
-      # ─── Extract sur le serveur ────────────────────────────────────────
-      - name: Extract archive via /_deploy/extract
+      # ─── Extract sur le serveur (via le standalone _extract.php) ─────
+      # Le standalone extract est upload avec l'archive et marche meme
+      # si Laravel n'est pas (encore) installe. Apres extraction, il
+      # se supprime lui-meme.
+      - name: Extract archive via /_extract.php
         run: |
           set -e
-          echo "Calling extract endpoint..."
+          echo "Calling _extract.php standalone..."
           curl --max-time 600 -fsS -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
-            "${{ secrets.APP_URL }}/_deploy/extract" \
+            "${{ secrets.APP_URL }}/_extract.php" \
             || (echo "::error::Extract failed" && exit 1)
 
       # ─── Post-deploy via endpoints HTTP ───────────────────────────────
