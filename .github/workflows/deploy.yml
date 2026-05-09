@@ -258,39 +258,57 @@ jobs:
           dangerous-clean-slate: false
 
       # ─── Extract sur le serveur (via le standalone _extract.php) ─────
-      # Le standalone extract est upload avec l'archive et marche meme
-      # si Laravel n'est pas (encore) installe. Apres extraction, il
-      # se supprime lui-meme.
+      # -L : suit les redirects (HTTP→HTTPS notamment)
+      # -w "%{http_code}" : log le code HTTP final pour debug
+      # On capture stdout pour le voir dans les logs Actions.
       - name: Extract archive via /_extract.php
         run: |
           set -e
           echo "Calling _extract.php standalone..."
-          curl --max-time 600 -fsS -X POST \
+          HTTP_CODE=$(curl -sS -L --max-time 600 -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
-            "${{ secrets.APP_URL }}/_extract.php" \
-            || (echo "::error::Extract failed" && exit 1)
+            -w "\n=== HTTP_CODE: %{http_code} ===\n" \
+            -o /tmp/extract-output.txt \
+            "${{ secrets.APP_URL }}/_extract.php" || echo "curl-failed")
+
+          echo "Server response:"
+          cat /tmp/extract-output.txt || echo "(no output)"
+          echo "$HTTP_CODE"
+
+          # Verif : on doit avoir HTTP 200 et "DONE" dans la reponse
+          if grep -q "DONE" /tmp/extract-output.txt; then
+            echo "Extract: SUCCESS"
+          else
+            echo "::error::Extract didn't complete properly (no DONE marker)"
+            exit 1
+          fi
 
       # ─── Post-deploy via endpoints HTTP ───────────────────────────────
       - name: Run migrations
         run: |
-          curl --max-time 300 -fsS -X POST \
+          set -e
+          curl -sS -L --max-time 300 -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
-            "${{ secrets.APP_URL }}/_deploy/migrate" \
-            || (echo "::error::Migration failed" && exit 1)
+            -o /tmp/migrate-output.txt \
+            -w "\n=== HTTP_CODE: %{http_code} ===\n" \
+            "${{ secrets.APP_URL }}/_deploy/migrate"
+          cat /tmp/migrate-output.txt
 
       - name: Refresh caches + opcache
         run: |
-          curl --max-time 60 -fsS -X POST \
+          curl -sS -L --max-time 60 -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
-            "${{ secrets.APP_URL }}/_deploy/cache" \
-            || (echo "::warning::Cache refresh failed (non-blocking)")
+            -o /tmp/cache-output.txt \
+            "${{ secrets.APP_URL }}/_deploy/cache" || true
+          cat /tmp/cache-output.txt || true
 
       - name: Storage symlink
         run: |
-          curl --max-time 60 -fsS -X POST \
+          curl -sS -L --max-time 60 -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
-            "${{ secrets.APP_URL }}/_deploy/storage-link" \
-            || (echo "::warning::Storage symlink already exists or failed (non-blocking)")
+            -o /tmp/symlink-output.txt \
+            "${{ secrets.APP_URL }}/_deploy/storage-link" || true
+          cat /tmp/symlink-output.txt || true
 
       # ─── Smoke test ────────────────────────────────────────────────────
       - name: Smoke test homepage
