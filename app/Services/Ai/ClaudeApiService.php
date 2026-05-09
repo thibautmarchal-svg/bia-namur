@@ -172,7 +172,7 @@ class ClaudeApiService
             );
         } catch (APIException $e) {
             throw new RuntimeException(
-                'Anthropic API error: '.$e->getMessage(),
+                'Anthropic API error: ' . $e->getMessage(),
                 $e->getCode(),
                 $e,
             );

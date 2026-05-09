@@ -51,8 +51,8 @@ class SendBriefPublishedNotificationJob implements ShouldQueue
         $payload = [
             'title' => 'Bia Namur — nouveau brief',
             'body' => $brief->title,
-            'url' => '/brief/'.$brief->slug,
-            'tag' => 'brief-'.$brief->slug,
+            'url' => '/brief/' . $brief->slug,
+            'tag' => 'brief-' . $brief->slug,
         ];
 
         $stats = $webPush->sendToMany($subscriptions, $payload);

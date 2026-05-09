@@ -7,9 +7,10 @@ use App\Mail\MagicLinkMail;
 use App\Models\MagicLink;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 
-function livewire($component, array $params = []): \Livewire\Features\SupportTesting\Testable
+function livewire($component, array $params = []): Testable
 {
     return Livewire::test($component, $params);
 }

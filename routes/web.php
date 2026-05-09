@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\BriefController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\FavoriteController;
@@ -14,6 +14,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
 use App\Http\Middleware\RecordPageView;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -110,9 +111,9 @@ Route::post('/_deploy/migrate', function () {
         abort(404);
     }
 
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    Artisan::call('migrate', ['--force' => true]);
 
-    return response('<pre>'.\Illuminate\Support\Facades\Artisan::output().'</pre>')
+    return response('<pre>' . Artisan::output() . '</pre>')
         ->header('Content-Type', 'text/html; charset=utf-8');
 })->middleware('throttle:3,60');
 
@@ -124,8 +125,8 @@ Route::post('/_deploy/cache', function () {
 
     $output = '';
     foreach (['config:cache', 'route:cache', 'view:cache', 'event:cache'] as $cmd) {
-        \Illuminate\Support\Facades\Artisan::call($cmd);
-        $output .= "[$cmd]\n".\Illuminate\Support\Facades\Artisan::output()."\n";
+        Artisan::call($cmd);
+        $output .= "[$cmd]\n" . Artisan::output() . "\n";
     }
 
     // Reset OPcache pour que le nouveau code soit pris en compte (alternative
@@ -135,7 +136,7 @@ Route::post('/_deploy/cache', function () {
         $output .= "[opcache_reset] OK\n";
     }
 
-    return response('<pre>'.e($output).'</pre>')
+    return response('<pre>' . e($output) . '</pre>')
         ->header('Content-Type', 'text/html; charset=utf-8');
 })->middleware('throttle:3,60');
 
@@ -145,9 +146,9 @@ Route::post('/_deploy/storage-link', function () {
         abort(404);
     }
 
-    \Illuminate\Support\Facades\Artisan::call('storage:link');
+    Artisan::call('storage:link');
 
-    return response('<pre>'.\Illuminate\Support\Facades\Artisan::output().'</pre>')
+    return response('<pre>' . Artisan::output() . '</pre>')
         ->header('Content-Type', 'text/html; charset=utf-8');
 })->middleware('throttle:3,60');
 
@@ -168,14 +169,14 @@ Route::post('/_deploy/extract', function () {
 
     $archivePath = base_path('bia-deploy.tar.gz');
     if (! is_file($archivePath)) {
-        return response('Archive introuvable : '.$archivePath, 500);
+        return response('Archive introuvable : ' . $archivePath, 500);
     }
 
-    $output = "Archive trouvee : ".filesize($archivePath)." bytes\n";
+    $output = 'Archive trouvee : ' . filesize($archivePath) . " bytes\n";
 
     try {
         // PharData supporte tar.gz nativement, pas besoin de PECL
-        $phar = new \PharData($archivePath);
+        $phar = new PharData($archivePath);
         $phar->extractTo(base_path(), null, true);
         $output .= "Extraction terminee\n";
 
@@ -193,12 +194,12 @@ Route::post('/_deploy/extract', function () {
             $output .= "OPcache reset OK\n";
         }
 
-        return response('<pre>'.e($output).'</pre>')
+        return response('<pre>' . e($output) . '</pre>')
             ->header('Content-Type', 'text/html; charset=utf-8');
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         return response(
-            '<pre>Extraction failed: '.e($e->getMessage()).'</pre>',
-            500
+            '<pre>Extraction failed: ' . e($e->getMessage()) . '</pre>',
+            500,
         )->header('Content-Type', 'text/html; charset=utf-8');
     }
 })->middleware('throttle:3,60');
@@ -212,7 +213,7 @@ Route::post('/_deploy/schedule', function () {
         abort(404);
     }
 
-    \Illuminate\Support\Facades\Artisan::call('schedule:run');
+    Artisan::call('schedule:run');
 
-    return response()->json(['ran' => true, 'output' => \Illuminate\Support\Facades\Artisan::output()]);
+    return response()->json(['ran' => true, 'output' => Artisan::output()]);
 })->middleware('throttle:120,1');

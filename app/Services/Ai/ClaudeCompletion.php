@@ -2,6 +2,8 @@
 
 namespace App\Services\Ai;
 
+use Illuminate\Support\Str;
+
 /**
  * Reponse structuree d'un appel Claude (mock ou reel).
  * Immutable, expose les donnees necessaires aux callers + un lien
@@ -49,8 +51,8 @@ final class ClaudeCompletion
             $decoded = json_decode($text, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
             throw new \RuntimeException(
-                'Reponse Claude pas du JSON valide : '.$e->getMessage().
-                ' — debut : '.\Illuminate\Support\Str::limit($this->text, 200),
+                'Reponse Claude pas du JSON valide : ' . $e->getMessage() .
+                ' — debut : ' . Str::limit($this->text, 200),
                 0,
                 $e,
             );

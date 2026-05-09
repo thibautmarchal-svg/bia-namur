@@ -38,7 +38,7 @@ class ClaudeSmokeTestCommand extends Command
         $model = $this->option('model') ?: config('bia.ai.models.default');
 
         $this->components->info("Smoke test Anthropic API — model: {$model}");
-        $this->components->info('Cle: '.substr($apiKey, 0, 10).'…'.substr($apiKey, -4).' ('.strlen($apiKey).' chars)');
+        $this->components->info('Cle: ' . substr($apiKey, 0, 10) . '…' . substr($apiKey, -4) . ' (' . strlen($apiKey) . ' chars)');
         $this->newLine();
 
         // Force mock_mode=false meme si l'env le force a true
@@ -73,7 +73,7 @@ class ClaudeSmokeTestCommand extends Command
             $this->newLine();
             if (trim(strtolower($completion->text)) !== 'pong') {
                 $this->components->warn(
-                    "Reponse inattendue : \"{$completion->text}\" — le modele n'a pas suivi l'instruction. ".
+                    "Reponse inattendue : \"{$completion->text}\" — le modele n'a pas suivi l'instruction. " .
                     'C\'est OK pour un smoke test (l\'important est que la connexion marche), mais a noter pour les prompts reels.',
                 );
             } else {
@@ -82,17 +82,17 @@ class ClaudeSmokeTestCommand extends Command
 
             return self::SUCCESS;
         } catch (\Throwable $e) {
-            $this->components->error('Echec smoke test : '.$e->getMessage());
+            $this->components->error('Echec smoke test : ' . $e->getMessage());
             $this->components->bulletList([
-                'Exception class : '.get_class($e),
-                'Message : '.$e->getMessage(),
+                'Exception class : ' . get_class($e),
+                'Message : ' . $e->getMessage(),
             ]);
 
             $this->newLine();
             $this->line('<fg=yellow>Debug rapide :</>');
-            $this->line('  - cle valide ?           '.(strlen($apiKey) >= 30 ? 'longueur OK' : 'TROP COURTE'));
-            $this->line('  - prefixe sk-ant- ?      '.(str_starts_with($apiKey, 'sk-ant-') ? 'oui' : 'NON (probable cle de test)'));
-            $this->line('  - mock_mode actif ?      '.(config('bia.ai.mock_mode') ? 'OUI (incoherent)' : 'non'));
+            $this->line('  - cle valide ?           ' . (strlen($apiKey) >= 30 ? 'longueur OK' : 'TROP COURTE'));
+            $this->line('  - prefixe sk-ant- ?      ' . (str_starts_with($apiKey, 'sk-ant-') ? 'oui' : 'NON (probable cle de test)'));
+            $this->line('  - mock_mode actif ?      ' . (config('bia.ai.mock_mode') ? 'OUI (incoherent)' : 'non'));
             $this->line('  - logs ai_runs           : verifie le dernier enregistrement');
 
             return self::FAILURE;

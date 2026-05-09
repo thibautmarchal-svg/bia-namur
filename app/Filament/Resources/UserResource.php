@@ -79,6 +79,7 @@ class UserResource extends Resource
                                 if ($record && $record->id === auth()->id()) {
                                     return 'Tu ne peux pas changer ton propre rôle (anti-lockout).';
                                 }
+
                                 return 'Modérateur : voit le panneau admin, modère les contributions. Admin : peut tout faire + gérer les utilisateurs.';
                             }),
                         Forms\Components\Select::make('subscription_tier')

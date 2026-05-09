@@ -41,7 +41,7 @@ class JsonLdBuilder
             '@context' => 'https://schema.org',
             '@type' => $schemaType,
             'name' => $place->name,
-            'url' => url('/lieu/'.$place->slug),
+            'url' => url('/lieu/' . $place->slug),
         ];
 
         if ($place->description) {
@@ -83,7 +83,7 @@ class JsonLdBuilder
             '@context' => 'https://schema.org',
             '@type' => 'Article',
             'headline' => $story->title,
-            'url' => url('/story/'.$story->slug),
+            'url' => url('/story/' . $story->slug),
             'inLanguage' => 'fr-BE',
             'publisher' => self::publisher(),
         ];
@@ -112,7 +112,7 @@ class JsonLdBuilder
             '@context' => 'https://schema.org',
             '@type' => 'Article',
             'headline' => $brief->title,
-            'url' => url('/brief/'.$brief->slug),
+            'url' => url('/brief/' . $brief->slug),
             'inLanguage' => 'fr-BE',
             'publisher' => self::publisher(),
         ];

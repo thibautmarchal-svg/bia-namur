@@ -59,7 +59,7 @@ class RecordPageView
 
     private function record(Request $request): void
     {
-        $path = '/'.ltrim($request->path(), '/');
+        $path = '/' . ltrim($request->path(), '/');
         $route = $request->route();
 
         $viewable = $this->resolveViewable($route?->getName(), $route?->parameter('slug'));
@@ -74,7 +74,7 @@ class RecordPageView
         // Salt environnement → un attaquant qui aurait acces a la BDD ne peut
         // pas faire de reverse lookup brute force sur l'espace IP.
         $salt = config('app.key');
-        $ipHash = hash('sha256', $ip.'|'.$salt);
+        $ipHash = hash('sha256', $ip . '|' . $salt);
 
         // Dedup 24h : si le meme hash IP a vu cette ressource dans la
         // derniere heure, on n'enregistre pas une 2e fois.

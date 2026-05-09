@@ -39,8 +39,8 @@ class GenerateVapidKeysCommand extends Command
         $this->newLine();
         $this->info('Paire VAPID generee. A coller dans .env :');
         $this->newLine();
-        $this->line('BIA_VAPID_PUBLIC_KEY='.$keys['publicKey']);
-        $this->line('BIA_VAPID_PRIVATE_KEY='.$keys['privateKey']);
+        $this->line('BIA_VAPID_PUBLIC_KEY=' . $keys['publicKey']);
+        $this->line('BIA_VAPID_PRIVATE_KEY=' . $keys['privateKey']);
         $this->line('BIA_VAPID_SUBJECT=mailto:contact@bianamur.be');
         $this->newLine();
         $this->warn('ATTENTION : ne regenere pas ces cles si des utilisateurs sont deja abonnes.');

@@ -83,7 +83,7 @@ class FavoriteController extends Controller
         if ($user->favorites()->count() >= $user->favoritesLimit()) {
             return back(303)->with('flash', [
                 'type' => 'limit',
-                'message' => 'Limite de '.$user->favoritesLimit().' favoris atteinte. Bia + débloquera plus de place.',
+                'message' => 'Limite de ' . $user->favoritesLimit() . ' favoris atteinte. Bia + débloquera plus de place.',
             ]);
         }
 

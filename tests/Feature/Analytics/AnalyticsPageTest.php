@@ -8,6 +8,7 @@ use App\Models\City;
 use App\Models\PageView;
 use App\Models\Place;
 use App\Models\User;
+use Filament\Tables\Table;
 
 beforeEach(function () {
     $this->city = City::create([
@@ -172,7 +173,7 @@ it('TopReferrersWidget excludes null referrers and bots', function () {
     ]);
 
     $widget = app(TopReferrersWidget::class);
-    $rows = $widget->table(\Filament\Tables\Table::make($widget))
+    $rows = $widget->table(Table::make($widget))
         ->getQuery()
         ->get()
         ->all();

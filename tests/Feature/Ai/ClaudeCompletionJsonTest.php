@@ -45,13 +45,13 @@ it('extracts JSON when text is prepended (greedy first brace to last brace)', fu
 it('throws a clear RuntimeException with a preview when truly invalid', function () {
     $junk = 'Je ne peux pas répondre à cette question.';
     expect(fn () => makeCompletion($junk)->toJson())
-        ->toThrow(\RuntimeException::class, 'pas du JSON valide');
+        ->toThrow(RuntimeException::class, 'pas du JSON valide');
 });
 
 it('throws when text decodes to a non-array (e.g. a JSON string)', function () {
     $text = '"just a string"';
     expect(fn () => makeCompletion($text)->toJson())
-        ->toThrow(\RuntimeException::class);
+        ->toThrow(RuntimeException::class);
 });
 
 it('handles JSON arrays (not just objects)', function () {

@@ -5,6 +5,7 @@ use App\Models\Brief;
 use App\Models\City;
 use App\Models\PushSubscription;
 use App\Models\User;
+use App\Services\Push\WebPushService;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
@@ -182,7 +183,7 @@ it('job exits early when push disabled', function () {
     ]);
 
     $job = new SendBriefPublishedNotificationJob($brief->id);
-    $job->handle(app(\App\Services\Push\WebPushService::class));
+    $job->handle(app(WebPushService::class));
 
     // Pas d'erreur, juste un log : aucune sub ne change
     expect(PushSubscription::first()->last_used_at)->toBeNull();
@@ -201,7 +202,7 @@ it('job is no-op if brief is not published', function () {
     ]);
 
     $job = new SendBriefPublishedNotificationJob($brief->id);
-    $job->handle(app(\App\Services\Push\WebPushService::class));
+    $job->handle(app(WebPushService::class));
 
     expect(true)->toBeTrue(); // pas d'exception
 });

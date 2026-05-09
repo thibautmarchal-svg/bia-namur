@@ -117,10 +117,10 @@ class AccountController extends Controller
             'favorites_count' => $favorites->count(),
         ]);
 
-        $filename = 'bia-namur-export-'.$user->id.'-'.now()->format('Y-m-d').'.json';
+        $filename = 'bia-namur-export-' . $user->id . '-' . now()->format('Y-m-d') . '.json';
 
         return response()->json($payload, 200, [
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 

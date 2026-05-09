@@ -53,7 +53,7 @@ class SitemapController extends Controller
         ];
         foreach ($static as [$path, $changefreq, $priority]) {
             $urls[] = [
-                'loc' => $base.$path,
+                'loc' => $base . $path,
                 'lastmod' => null,
                 'changefreq' => $changefreq,
                 'priority' => $priority,
@@ -68,7 +68,7 @@ class SitemapController extends Controller
             ->get(['slug', 'updated_at']);
         foreach ($places as $place) {
             $urls[] = [
-                'loc' => $base.'/lieu/'.$place->slug,
+                'loc' => $base . '/lieu/' . $place->slug,
                 'lastmod' => $place->updated_at?->toIso8601String(),
                 'changefreq' => 'monthly',
                 'priority' => '0.8',
@@ -83,7 +83,7 @@ class SitemapController extends Controller
             ->get(['slug', 'updated_at']);
         foreach ($stories as $story) {
             $urls[] = [
-                'loc' => $base.'/story/'.$story->slug,
+                'loc' => $base . '/story/' . $story->slug,
                 'lastmod' => $story->updated_at?->toIso8601String(),
                 'changefreq' => 'yearly',
                 'priority' => '0.7',
@@ -99,7 +99,7 @@ class SitemapController extends Controller
             ->get(['slug', 'published_at', 'updated_at']);
         foreach ($briefs as $brief) {
             $urls[] = [
-                'loc' => $base.'/brief/'.$brief->slug,
+                'loc' => $base . '/brief/' . $brief->slug,
                 'lastmod' => ($brief->published_at ?? $brief->updated_at)?->toIso8601String(),
                 'changefreq' => 'monthly',
                 'priority' => '0.6',
@@ -111,21 +111,21 @@ class SitemapController extends Controller
 
     private function renderXml(array $urls): string
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
         foreach ($urls as $url) {
             $xml .= "  <url>\n";
-            $xml .= '    <loc>'.htmlspecialchars($url['loc'], ENT_XML1).'</loc>'."\n";
+            $xml .= '    <loc>' . htmlspecialchars($url['loc'], ENT_XML1) . '</loc>' . "\n";
             if ($url['lastmod']) {
-                $xml .= '    <lastmod>'.htmlspecialchars($url['lastmod'], ENT_XML1).'</lastmod>'."\n";
+                $xml .= '    <lastmod>' . htmlspecialchars($url['lastmod'], ENT_XML1) . '</lastmod>' . "\n";
             }
-            $xml .= '    <changefreq>'.$url['changefreq'].'</changefreq>'."\n";
-            $xml .= '    <priority>'.$url['priority'].'</priority>'."\n";
+            $xml .= '    <changefreq>' . $url['changefreq'] . '</changefreq>' . "\n";
+            $xml .= '    <priority>' . $url['priority'] . '</priority>' . "\n";
             $xml .= "  </url>\n";
         }
 
-        $xml .= '</urlset>'."\n";
+        $xml .= '</urlset>' . "\n";
 
         return $xml;
     }

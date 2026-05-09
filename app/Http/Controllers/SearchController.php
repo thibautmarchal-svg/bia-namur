@@ -32,7 +32,7 @@ class SearchController extends Controller
 
         if (mb_strlen($query) >= self::MIN_QUERY_LENGTH) {
             $namur = City::where('slug', 'namur')->firstOrFail();
-            $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $query).'%';
+            $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $query) . '%';
 
             $places = Place::query()
                 ->forCity($namur)
