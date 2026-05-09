@@ -151,6 +151,58 @@ Route::post('/_deploy/storage-link', function () {
         ->header('Content-Type', 'text/html; charset=utf-8');
 })->middleware('throttle:3,60');
 
+// Endpoint d'extraction d'archive de deploiement.
+// Le workflow GitHub Actions upload un .tar.gz qui contient TOUT
+// le code (Laravel + vendor + public/build), beaucoup plus rapide
+// qu'uploader 10000 fichiers individuels en FTP.
+// Cet endpoint l'extrait sur place, puis supprime l'archive.
+Route::post('/_deploy/extract', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    // PHP CLI memory limit override pour les gros extracts
+    @ini_set('memory_limit', '512M');
+    @set_time_limit(600);
+
+    $archivePath = base_path('bia-deploy.tar.gz');
+    if (! is_file($archivePath)) {
+        return response('Archive introuvable : '.$archivePath, 500);
+    }
+
+    $output = "Archive trouvee : ".filesize($archivePath)." bytes\n";
+
+    try {
+        // PharData supporte tar.gz nativement, pas besoin de PECL
+        $phar = new \PharData($archivePath);
+        $phar->extractTo(base_path(), null, true);
+        $output .= "Extraction terminee\n";
+
+        unlink($archivePath);
+        $output .= "Archive supprimee\n";
+
+        // Permissions Laravel critiques
+        @chmod(base_path('storage'), 0775);
+        @chmod(base_path('bootstrap/cache'), 0775);
+        $output .= "Permissions storage/ et bootstrap/cache/ → 775\n";
+
+        // OPcache reset pour que le nouveau code soit pris en compte
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+            $output .= "OPcache reset OK\n";
+        }
+
+        return response('<pre>'.e($output).'</pre>')
+            ->header('Content-Type', 'text/html; charset=utf-8');
+    } catch (\Throwable $e) {
+        return response(
+            '<pre>Extraction failed: '.e($e->getMessage()).'</pre>',
+            500
+        )->header('Content-Type', 'text/html; charset=utf-8');
+    }
+})->middleware('throttle:3,60');
+
 // Endpoint scheduler pour cron externe (cron-job.org ou EasyCron).
 // Appele toutes les minutes via POST avec le secret. Laravel decide
 // lui-meme si une tache doit s'executer a ce moment.

@@ -1,8 +1,9 @@
 name: Deploy to bianamur.be
 
-# Strategie : build local sur le runner GitHub, FTP-deploy vers
-# l'hebergement mutualise. Migrations + cache via endpoints HTTP
-# proteges par BIA_DEPLOY_SECRET (pas de SSH disponible).
+# Strategie : build local sur runner GitHub, ARCHIVE en tar.gz,
+# UPLOAD UNIQUE de l'archive via FTP (~50MB en 2min vs 4h+ pour
+# 10000 fichiers individuels), EXTRACTION cote serveur via endpoint
+# PHP. Migrations + cache via curl POST.
 
 on:
   push:
@@ -15,7 +16,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Build + FTP + post-deploy hooks
+    name: Build + tar.gz + FTP single + extract
     runs-on: ubuntu-latest
 
     steps:
@@ -58,10 +59,7 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      # ─── Generation du .env de prod ─────────────────────────────────────
-      # On cree un .env complet a partir des GitHub Secrets, qui sera
-      # uploade tel quel via FTP. Vite a besoin de certaines vars (VITE_*)
-      # AVANT le build, donc on cree le .env d'abord.
+      # ─── Generation .env de prod (avant build car Vite lit VITE_*) ────
       - name: Generate production .env
         run: |
           cat > .env <<EOF
@@ -118,7 +116,6 @@ jobs:
       - name: Build frontend (Vite + PWA)
         run: npm run build
 
-      # ─── Optimize Laravel (caches generes localement, uploades via FTP) ─
       - name: Optimize Laravel caches
         run: |
           php artisan config:cache
@@ -126,66 +123,97 @@ jobs:
           php artisan view:cache
           php artisan event:cache
 
-      # ─── FTP Deploy ───────────────────────────────────────────────────
-      - name: Deploy via FTP
+      # ─── Creer l'archive de deploiement (tar.gz) ──────────────────────
+      # On exclut tout ce qui n'a pas a aller en prod : tests, dev,
+      # node_modules (le build est dans public/build), assets-logo, etc.
+      - name: Create deployment archive
+        run: |
+          mkdir -p _ftp_stage
+
+          tar -czf _ftp_stage/bia-deploy.tar.gz \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./.gitignore' \
+            --exclude='./.gitattributes' \
+            --exclude='./.editorconfig' \
+            --exclude='./.env.example' \
+            --exclude='./.env.production.example' \
+            --exclude='./node_modules' \
+            --exclude='./tests' \
+            --exclude='./scripts' \
+            --exclude='./assets-logo' \
+            --exclude='./_ftp_stage' \
+            --exclude='./storage/logs/*.log' \
+            --exclude='./storage/framework/cache/data/*' \
+            --exclude='./storage/framework/sessions/*' \
+            --exclude='./storage/framework/views/*' \
+            --exclude='./storage/framework/testing' \
+            --exclude='./storage/app/private' \
+            --exclude='./storage/app/public/uploads/*' \
+            --exclude='./CLAUDE.md' \
+            --exclude='./DEPLOYMENT.md' \
+            --exclude='./brief-bia-namur.md' \
+            --exclude='./secrets-bia-namur.md' \
+            --exclude='./README.md' \
+            --exclude='./BOIP-DOSSIER.md' \
+            --exclude='./bianamur_deploy*' \
+            --exclude='./*.pem' \
+            --exclude='./id_rsa*' \
+            --exclude='./id_ed25519*' \
+            --exclude='./phpunit.xml' \
+            --exclude='./pint.json' \
+            --exclude='./tailwind.config.js' \
+            --exclude='./postcss.config.js' \
+            --exclude='./vite.config.js' \
+            --exclude='./package.json' \
+            --exclude='./package-lock.json' \
+            .
+
+          ls -lh _ftp_stage/bia-deploy.tar.gz
+          echo "Archive size: $(du -h _ftp_stage/bia-deploy.tar.gz | cut -f1)"
+
+      # ─── FTP upload (1 seule archive, ~50 MB, ~2 min) ─────────────────
+      - name: Upload archive via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
+          local-dir: ./_ftp_stage/
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          # Garde les uploads users + logs deja en place. Skip les fichiers
-          # de dev qui ne servent a rien en prod.
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/tests/**
-            **/.env.example
-            **/.env.production.example
-            **/storage/logs/**
-            **/storage/framework/cache/**
-            **/storage/framework/sessions/**
-            **/storage/framework/views/**
-            **/storage/app/private/**
-            **/storage/app/public/uploads/**
-            **/scripts/**
-            **/assets-logo/**
-            **/.editorconfig
-            **/.gitignore
-            **/.gitattributes
-            **/phpunit.xml
-            **/pint.json
-            **/postcss.config.js
-            **/tailwind.config.js
-            **/vite.config.js
-            **/CLAUDE.md
-            **/DEPLOYMENT.md
-            **/brief-bia-namur.md
-            **/secrets-bia-namur.md
-            **/README.md
-            **/BOIP-DOSSIER.md
-            **/bianamur_deploy*
+          # Pas de state file car 1 seul fichier a chaque fois
+          state-name: .ftp-deploy-archive-state.json
+          # Pas d'exclusion necessaire, le local-dir contient juste l'archive
+          dangerous-clean-slate: false
+
+      # ─── Extract sur le serveur ────────────────────────────────────────
+      - name: Extract archive via /_deploy/extract
+        run: |
+          set -e
+          echo "Calling extract endpoint..."
+          curl --max-time 600 -fsS -X POST \
+            -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
+            "${{ secrets.APP_URL }}/_deploy/extract" \
+            || (echo "::error::Extract failed" && exit 1)
 
       # ─── Post-deploy via endpoints HTTP ───────────────────────────────
-      - name: Run migrations via /_deploy/migrate
+      - name: Run migrations
         run: |
-          curl -fsS -X POST \
+          curl --max-time 300 -fsS -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
             "${{ secrets.APP_URL }}/_deploy/migrate" \
             || (echo "::error::Migration failed" && exit 1)
 
-      - name: Refresh caches + opcache via /_deploy/cache
+      - name: Refresh caches + opcache
         run: |
-          curl -fsS -X POST \
+          curl --max-time 60 -fsS -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
             "${{ secrets.APP_URL }}/_deploy/cache" \
             || (echo "::warning::Cache refresh failed (non-blocking)")
 
-      - name: Storage symlink (idempotent)
+      - name: Storage symlink
         run: |
-          curl -fsS -X POST \
+          curl --max-time 60 -fsS -X POST \
             -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
             "${{ secrets.APP_URL }}/_deploy/storage-link" \
             || (echo "::warning::Storage symlink already exists or failed (non-blocking)")
