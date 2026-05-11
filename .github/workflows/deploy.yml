@@ -116,12 +116,9 @@ jobs:
       - name: Build frontend (Vite + PWA)
         run: npm run build
 
-      - name: Optimize Laravel caches
-        run: |
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-          php artisan event:cache
+      # ⚠️ On ne fait PAS artisan config:cache localement : les chemins
+      # absolus seraient ceux du runner GitHub, pas du serveur. La cache
+      # est generee a destination via /_deploy/cache apres extraction.
 
       # ─── Creer l'archive de deploiement (tar.gz) ──────────────────────
       # On exclut tout ce qui n'a pas a aller en prod : tests, dev,
