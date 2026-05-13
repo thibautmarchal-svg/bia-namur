@@ -21,11 +21,11 @@ class SeoBuilder
 {
     /**
      * Image OG par defaut (Facebook/LinkedIn/WhatsApp/Twitter) quand
-     * le contenu n'a pas sa propre cover photo. Fallback vers la photo
-     * confluent Sambre-Meuse (CC BY-SA 3.0) en attendant la creation
-     * d'une vraie image OG 1200x630 dediee (TODO design).
+     * le contenu n'a pas sa propre cover photo. 1200x630 = format Facebook
+     * recommande, ratio 1.91:1. Generee depuis assets-logo/og-image.svg
+     * via `node scripts/generate-og-image.mjs`.
      */
-    private const DEFAULT_OG_IMAGE = '/images/defaults/places/confluent-sambre-meuse.jpg';
+    private const DEFAULT_OG_IMAGE = '/images/og/bia-namur-default.jpg';
 
     /**
      * SEO de la home — vitrine principale, tagline complete.
