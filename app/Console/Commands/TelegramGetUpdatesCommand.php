@@ -65,7 +65,7 @@ class TelegramGetUpdatesCommand extends Command
             $this->newLine();
             $this->line('  Si setWebhook est deja configure, getUpdates est inactif :');
             $this->line('  appelle deleteWebhook d\'abord :');
-            $this->line("    <fg=cyan>curl \"https://api.telegram.org/bot{TOKEN}/deleteWebhook\"</>");
+            $this->line('    <fg=cyan>curl "https://api.telegram.org/bot{TOKEN}/deleteWebhook"</>');
 
             return self::SUCCESS;
         }
