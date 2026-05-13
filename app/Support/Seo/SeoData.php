@@ -7,11 +7,18 @@ namespace App\Support\Seo;
  *
  * Injecte dans la vue Blade racine via view()->share('seo', ...).
  * Lue par resources/views/app.blade.php pour generer title + description
- * + canonical + Open Graph + Twitter Card dans le HTML servi (donc visible
- * par Google et les bots reseaux sociaux qui n'executent pas le JS).
+ * + canonical + Open Graph + Twitter Card + JSON-LD dans le HTML servi
+ * (donc visible par Google et les bots reseaux sociaux qui n'executent
+ * pas le JS).
  */
 class SeoData
 {
+    /**
+     * @param  array<int, array<string, mixed>>  $jsonLd  Liste de schemas
+     *                                                    schema.org a injecter en <script type="application/ld+json">.
+     *                                                    Plusieurs scripts autorises (recommande par Google) pour
+     *                                                    separer les schemas (Article + Breadcrumb par exemple).
+     */
     public function __construct(
         public readonly string $title,
         public readonly string $description,
@@ -22,5 +29,6 @@ class SeoData
         public readonly ?string $articlePublishedTime = null,
         public readonly ?string $articleModifiedTime = null,
         public readonly bool $noindex = false,
+        public readonly array $jsonLd = [],
     ) {}
 }

@@ -127,7 +127,7 @@ it('builds Article schema for a brief with datePublished', function () {
         ->toHaveKey('datePublished');
 });
 
-it('exposes jsonld in PlaceResource only on places.show route', function () {
+it('renders jsonld as script tag in the HTML on places.show route', function () {
     Place::create([
         'city_id' => $this->city->id,
         'slug' => 'visible',
@@ -137,17 +137,13 @@ it('exposes jsonld in PlaceResource only on places.show route', function () {
         'status' => Place::STATUS_PUBLISHED,
     ]);
 
-    // Sur /lieu/{slug} : jsonld present
-    $this->get('/lieu/visible')
-        ->assertInertia(fn ($page) => $page
-            ->has('place.jsonld')
-            ->where('place.jsonld.@type', 'CafeOrCoffeeShop'),
-        );
+    // Sur /lieu/{slug} : balise <script type="application/ld+json"> presente
+    // avec le schema CafeOrCoffeeShop pour ce lieu (rendue cote Blade par
+    // resources/views/app.blade.php via $seo->jsonLd).
+    $html = $this->get('/lieu/visible')->getContent();
 
-    // Sur /lieux : jsonld absent (collection)
-    $this->get('/lieux')
-        ->assertInertia(fn ($page) => $page
-            ->has('places.0')
-            ->missing('places.0.jsonld'),
-        );
+    expect($html)
+        ->toContain('application/ld+json')
+        ->toContain('"@type":"CafeOrCoffeeShop"')
+        ->toContain('"name":"Visible"');
 });

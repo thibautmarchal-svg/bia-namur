@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Support\JsonLdBuilder;
 use App\Support\PhotoResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -18,6 +17,10 @@ class BriefResource extends JsonResource
             $cover = PhotoResolver::for(PhotoResolver::TYPE_BRIEF, 'default', $this->title);
         }
 
+        // Note : le JSON-LD est genere via SeoBuilder::forBrief et rendu
+        // cote Blade (cf. resources/views/app.blade.php) pour etre vu par
+        // Googlebot sans dependre de l'hydration JS.
+
         return [
             'id' => $this->id,
             'slug' => $this->slug,
@@ -29,10 +32,6 @@ class BriefResource extends JsonResource
             'published_at' => $this->published_at?->toIso8601String(),
             'cover_photo' => $cover,
             'items' => BriefItemResource::collection($this->whenLoaded('items')),
-            'jsonld' => $this->when(
-                $request->routeIs('briefs.show'),
-                fn () => JsonLdBuilder::forBrief($this->resource),
-            ),
         ];
     }
 }

@@ -5,7 +5,6 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import DataAttribution from '@/Components/DataAttribution.vue';
 import PhotoCredit from '@/Components/PhotoCredit.vue';
 import FavoriteButton from '@/Components/FavoriteButton.vue';
-import JsonLd from '@/Components/JsonLd.vue';
 
 const props = defineProps({
     place: { type: Object, required: true },
@@ -46,8 +45,6 @@ const contact = computed(() =>
         <title>{{ data.name }}</title>
         <meta name="description" :content="data.description" />
     </Head>
-
-    <JsonLd v-if="data.jsonld" :schema="data.jsonld" />
 
     <AppLayout>
         <div v-if="photo" class="place-cover">

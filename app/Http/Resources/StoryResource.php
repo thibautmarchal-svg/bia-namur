@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Support\JsonLdBuilder;
 use App\Support\PhotoResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -11,6 +10,8 @@ class StoryResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // Note : le JSON-LD est genere via SeoBuilder::forStory et rendu
+        // cote Blade pour etre indexable par Googlebot sans hydration JS.
         return [
             'id' => $this->id,
             'slug' => $this->slug,
@@ -27,10 +28,6 @@ class StoryResource extends JsonResource
             'ai_generated' => (bool) $this->ai_generated,
             'reading_minutes' => max(1, (int) ceil(str_word_count(strip_tags($this->content ?? '')) / 220)),
             'updated_at' => $this->updated_at?->toIso8601String(),
-            'jsonld' => $this->when(
-                $request->routeIs('stories.show'),
-                fn () => JsonLdBuilder::forStory($this->resource),
-            ),
         ];
     }
 }

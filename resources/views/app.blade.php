@@ -56,6 +56,13 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @inertiaHead
+
+    {{-- JSON-LD Schema.org : injecte cote serveur pour que Googlebot le voit
+         immediatement (sans attendre l'hydration JS). Plusieurs schemas par
+         page autorises (recommande Google) : separe @Article + BreadcrumbList. --}}
+    @foreach ($seo->jsonLd as $schema)
+        <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    @endforeach
 </head>
 <body class="h-full bg-bia-cream text-bia-ink font-sans antialiased">
     @inertia

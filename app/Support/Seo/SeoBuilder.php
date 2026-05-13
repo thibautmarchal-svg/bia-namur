@@ -5,6 +5,7 @@ namespace App\Support\Seo;
 use App\Models\Brief;
 use App\Models\Place;
 use App\Models\Story;
+use App\Support\JsonLdBuilder;
 use App\Support\PhotoResolver;
 use Illuminate\Support\Str;
 
@@ -39,6 +40,7 @@ class SeoBuilder
             ogImage: self::absoluteUrl(self::DEFAULT_OG_IMAGE),
             ogType: 'website',
             ogImageAlt: 'Bia Namur — Le carnet vivant des Namurois',
+            jsonLd: JsonLdBuilder::forHome(),
         );
     }
 
@@ -50,6 +52,12 @@ class SeoBuilder
             canonical: self::absoluteUrl('/lieux'),
             ogImage: self::absoluteUrl(self::DEFAULT_OG_IMAGE),
             ogType: 'website',
+            jsonLd: [
+                JsonLdBuilder::breadcrumb([
+                    ['name' => 'Accueil', 'url' => '/'],
+                    ['name' => 'Lieux', 'url' => '/lieux'],
+                ]),
+            ],
         );
     }
 
@@ -71,6 +79,14 @@ class SeoBuilder
             ogImage: $ogImage,
             ogType: 'website',
             ogImageAlt: $place->name,
+            jsonLd: [
+                JsonLdBuilder::forPlace($place),
+                JsonLdBuilder::breadcrumb([
+                    ['name' => 'Accueil', 'url' => '/'],
+                    ['name' => 'Lieux', 'url' => '/lieux'],
+                    ['name' => $place->name, 'url' => "/lieu/{$place->slug}"],
+                ]),
+            ],
         );
     }
 
@@ -82,6 +98,12 @@ class SeoBuilder
             canonical: self::absoluteUrl('/stories'),
             ogImage: self::absoluteUrl(self::DEFAULT_OG_IMAGE),
             ogType: 'website',
+            jsonLd: [
+                JsonLdBuilder::breadcrumb([
+                    ['name' => 'Accueil', 'url' => '/'],
+                    ['name' => 'Stories', 'url' => '/stories'],
+                ]),
+            ],
         );
     }
 
@@ -105,6 +127,14 @@ class SeoBuilder
             ogImageAlt: $story->title,
             articlePublishedTime: $story->published_at?->toIso8601String(),
             articleModifiedTime: $story->updated_at?->toIso8601String(),
+            jsonLd: [
+                JsonLdBuilder::forStory($story),
+                JsonLdBuilder::breadcrumb([
+                    ['name' => 'Accueil', 'url' => '/'],
+                    ['name' => 'Stories', 'url' => '/stories'],
+                    ['name' => $story->title, 'url' => "/story/{$story->slug}"],
+                ]),
+            ],
         );
     }
 
@@ -116,6 +146,12 @@ class SeoBuilder
             canonical: self::absoluteUrl('/briefs'),
             ogImage: self::absoluteUrl(self::DEFAULT_OG_IMAGE),
             ogType: 'website',
+            jsonLd: [
+                JsonLdBuilder::breadcrumb([
+                    ['name' => 'Accueil', 'url' => '/'],
+                    ['name' => 'Briefs', 'url' => '/briefs'],
+                ]),
+            ],
         );
     }
 
@@ -143,6 +179,14 @@ class SeoBuilder
             ogImageAlt: $brief->title,
             articlePublishedTime: $brief->published_at?->toIso8601String(),
             articleModifiedTime: $brief->updated_at?->toIso8601String(),
+            jsonLd: [
+                JsonLdBuilder::forBrief($brief),
+                JsonLdBuilder::breadcrumb([
+                    ['name' => 'Accueil', 'url' => '/'],
+                    ['name' => 'Briefs', 'url' => '/briefs'],
+                    ['name' => "Semaine {$brief->week_number}", 'url' => "/brief/{$brief->slug}"],
+                ]),
+            ],
         );
     }
 

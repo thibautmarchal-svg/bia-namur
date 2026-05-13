@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Support\JsonLdBuilder;
 use App\Support\PhotoResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -11,6 +10,9 @@ class PlaceResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // Note : le JSON-LD n'est plus expose ici. Il est genere via
+        // SeoBuilder::forPlace et rendu cote Blade pour etre indexable
+        // par Googlebot sans dependre de l'hydration JS.
         return [
             'id' => $this->id,
             'slug' => $this->slug,
@@ -32,10 +34,6 @@ class PlaceResource extends JsonResource
             'source' => $this->source,
             'story' => StoryResource::make($this->whenLoaded('story')),
             'updated_at' => $this->updated_at?->toIso8601String(),
-            'jsonld' => $this->when(
-                $request->routeIs('places.show'),
-                fn () => JsonLdBuilder::forPlace($this->resource),
-            ),
         ];
     }
 }
