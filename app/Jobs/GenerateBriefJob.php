@@ -172,7 +172,7 @@ class GenerateBriefJob implements ShouldQueue
         return "Voici les events publiés par la Ville de Namur sur son agenda officiel.\n\n"
             . "DATE AUJOURD'HUI : {$payload['date_aujourdhui']}\n"
             . "SEMAINE BRIEF : du {$payload['semaine_debut']} au {$payload['semaine_fin']}\n\n"
-            . "INSTRUCTION : sélectionne 5 à 7 events qui se passent CETTE SEMAINE OU TRÈS BIENTÔT "
+            . 'INSTRUCTION : sélectionne 5 à 7 events qui se passent CETTE SEMAINE OU TRÈS BIENTÔT '
             . "(les events ont leur date dans le titre ou la description — utilise ces indices).\n"
             . "Diversifie les types : concert, expo, balade nature, théâtre, marché, gastronomie, patrimoine.\n"
             . "Rédige le brief Bia Namur (intro + items + outro) en respectant le ton namurois chaleureux.\n\n"

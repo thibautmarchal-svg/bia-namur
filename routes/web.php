@@ -224,7 +224,7 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 
     try {
         Artisan::call('schedule:run');
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         Log::error('schedule.run_failed', ['error' => $e->getMessage()]);
 
         return response('ERR', 200)->header('Content-Type', 'text/plain');
