@@ -250,6 +250,29 @@ Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
 
+// Endpoint variante GET de /_deploy/cache pour debug sans tomber sur le
+// throttle 3/60 min (qui peut bloquer l'admin en debug iteratif).
+Route::match(['get', 'post'], '/_deploy/cache-refresh', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $output = '';
+    foreach (['config:clear', 'config:cache', 'route:clear', 'route:cache', 'view:clear', 'view:cache'] as $cmd) {
+        Artisan::call($cmd);
+        $output .= "[$cmd]\n" . Artisan::output() . "\n";
+    }
+
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+        $output .= "[opcache_reset] OK\n";
+    }
+
+    return response('<pre>' . e($output) . '</pre>')
+        ->header('Content-Type', 'text/html; charset=utf-8');
+})->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
+
 // Endpoint utilitaire : flush tous les rate limiters Laravel (table cache).
 // Utile en debug quand on a spamme une route et qu'on est throttled
 // pour 1h sans pouvoir attendre. Affecte aussi les autres caches en DB
