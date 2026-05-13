@@ -171,7 +171,8 @@ jobs:
 
       # ─── Generer l'extractor PHP standalone ──────────────────────────
       # Pour le 1er deploy ou si Laravel ne tourne pas. Pas de dependance
-      # Laravel : simple PharData::extractTo + chmod + opcache_reset.
+      # Laravel : utilise tar -xzf (shell) car PharData::extractTo plante
+      # sur les entrees './' dans nos archives ("Cannot extract '.' internal").
       # Verifie le secret partage via hash_equals (timing-safe).
       - name: Create standalone PHP extractor
         env:
@@ -202,33 +203,38 @@ jobs:
 
           echo "Archive : " . filesize($archive) . " bytes\n";
 
-          try {
-              $phar = new \PharData($archive);
-              $phar->extractTo(__DIR__, null, true);
-              echo "Extraction OK\n";
-
-              @unlink($archive);
-              echo "Archive supprimee\n";
-
-              foreach (['storage', 'bootstrap/cache'] as $dir) {
-                  $p = __DIR__ . '/' . $dir;
-                  if (is_dir($p)) {
-                      @chmod($p, 0775);
-                      echo "chmod 775 $dir\n";
-                  }
-              }
-
-              if (function_exists('opcache_reset')) {
-                  opcache_reset();
-                  echo "OPcache reset\n";
-              }
-
-              @unlink(__FILE__);
-              echo "Self-deleted\nDONE\n";
-          } catch (\Throwable $e) {
+          // Extraction via tar shell (PharData plante sur entrees ./).
+          $cmd = 'tar -xzf ' . escapeshellarg($archive)
+              . ' -C ' . escapeshellarg(__DIR__) . ' 2>&1';
+          $output = [];
+          $rc = 0;
+          exec($cmd, $output, $rc);
+          if ($rc !== 0) {
               http_response_code(500);
-              echo "FAILED: " . $e->getMessage() . "\n";
+              echo "tar FAILED rc=$rc\n";
+              echo implode("\n", $output) . "\n";
+              exit;
           }
+          echo "Extraction OK (tar shell)\n";
+
+          @unlink($archive);
+          echo "Archive supprimee\n";
+
+          foreach (['storage', 'bootstrap/cache'] as $dir) {
+              $p = __DIR__ . '/' . $dir;
+              if (is_dir($p)) {
+                  @chmod($p, 0775);
+                  echo "chmod 775 $dir\n";
+              }
+          }
+
+          if (function_exists('opcache_reset')) {
+              opcache_reset();
+              echo "OPcache reset\n";
+          }
+
+          @unlink(__FILE__);
+          echo "Self-deleted\nDONE\n";
           PHPEOF
 
           sed -i "s|###BIA_DEPLOY_SECRET###|$INJECTED_SECRET|g" _ftp_stage/_extract.php
