@@ -17,7 +17,10 @@ use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Middleware\RecordPageView;
 use App\Models\Brief;
 use App\Services\Telegram\TelegramNotifier;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -246,6 +249,28 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
+
+// Endpoint utilitaire : flush tous les rate limiters Laravel (table cache).
+// Utile en debug quand on a spamme une route et qu'on est throttled
+// pour 1h sans pouvoir attendre. Affecte aussi les autres caches en DB
+// (assume-le, c'est un endpoint admin uniquement).
+Route::match(['get', 'post'], '/_deploy/clear-throttle', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    try {
+        Cache::store(config('cache.default'))->flush();
+        DB::table('cache')->where('key', 'like', '%rate_limiter%')->delete();
+
+        return response("OK\nCache + rate limiters flushed.\n", 200)
+            ->header('Content-Type', 'text/plain');
+    } catch (Throwable $e) {
+        return response("FAILED: {$e->getMessage()}\n", 500)
+            ->header('Content-Type', 'text/plain');
+    }
+})->withoutMiddleware([ThrottleRequests::class]);
 
 // Endpoint test SMTP : envoie un mail "ping" a une adresse arbitraire
 // et retourne le diagnostic clair (config + resultat + exception eventuelle).
