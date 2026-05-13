@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Resources\StoryResource;
 use App\Models\City;
 use App\Models\Story;
+use App\Support\Seo\SeoBuilder;
+use Illuminate\Support\Facades\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,6 +14,8 @@ class StoryController extends Controller
 {
     public function index(): Response
     {
+        View::share('seo', SeoBuilder::forStoriesIndex());
+
         $namur = City::where('slug', 'namur')->firstOrFail();
 
         $stories = Story::query()
@@ -41,6 +45,8 @@ class StoryController extends Controller
             ->where('status', Story::STATUS_PUBLISHED)
             ->with(['place:id,slug,name,type'])
             ->firstOrFail();
+
+        View::share('seo', SeoBuilder::forStory($story));
 
         return Inertia::render('Stories/Show', [
             'story' => StoryResource::make($story),

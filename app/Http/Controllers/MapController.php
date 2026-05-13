@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Resources\PlaceResource;
 use App\Models\City;
 use App\Models\Place;
+use App\Support\Seo\SeoBuilder;
+use Illuminate\Support\Facades\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,6 +14,8 @@ class MapController extends Controller
 {
     public function __invoke(): Response
     {
+        View::share('seo', SeoBuilder::forMap());
+
         $namur = City::where('slug', 'namur')->firstOrFail();
 
         $places = Place::query()

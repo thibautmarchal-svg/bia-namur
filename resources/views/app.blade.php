@@ -4,7 +4,39 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#C77F2C">
-    <meta name="description" content="Bia Namur — le carnet vivant des Namurois. Brief hebdo curaté, carte sentimentale des bonnes adresses, stories du patrimoine.">
+
+    {{-- SEO core --}}
+    <title>{{ $seo->title }}</title>
+    <meta name="description" content="{{ $seo->description }}">
+    <link rel="canonical" href="{{ $seo->canonical }}">
+    @if ($seo->noindex)
+        <meta name="robots" content="noindex, nofollow">
+    @endif
+
+    {{-- Open Graph (Facebook / LinkedIn / WhatsApp / Slack) --}}
+    <meta property="og:site_name" content="Bia Namur">
+    <meta property="og:locale" content="fr_BE">
+    <meta property="og:type" content="{{ $seo->ogType }}">
+    <meta property="og:title" content="{{ $seo->title }}">
+    <meta property="og:description" content="{{ $seo->description }}">
+    <meta property="og:url" content="{{ $seo->canonical }}">
+    <meta property="og:image" content="{{ $seo->ogImage }}">
+    <meta property="og:image:alt" content="{{ $seo->ogImageAlt }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    @if ($seo->articlePublishedTime)
+        <meta property="article:published_time" content="{{ $seo->articlePublishedTime }}">
+    @endif
+    @if ($seo->articleModifiedTime)
+        <meta property="article:modified_time" content="{{ $seo->articleModifiedTime }}">
+    @endif
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seo->title }}">
+    <meta name="twitter:description" content="{{ $seo->description }}">
+    <meta name="twitter:image" content="{{ $seo->ogImage }}">
+    <meta name="twitter:image:alt" content="{{ $seo->ogImageAlt }}">
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -17,8 +49,6 @@
     @if (file_exists(public_path('build/manifest.webmanifest')))
         <link rel="manifest" href="{{ asset('build/manifest.webmanifest') }}">
     @endif
-
-    <title inertia>{{ config('app.name', 'Bia Namur') }}</title>
 
     {{-- Fontes via Bunny Fonts (alternative Google Fonts respectueuse RGPD) --}}
     <link rel="preconnect" href="https://fonts.bunny.net">

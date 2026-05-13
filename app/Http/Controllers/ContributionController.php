@@ -6,9 +6,11 @@ use App\Http\Requests\StoreContributionRequest;
 use App\Jobs\ModerateContributionJob;
 use App\Models\Contribution;
 use App\Services\Media\PhotoUploadService;
+use App\Support\Seo\SeoBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,6 +33,8 @@ class ContributionController extends Controller
 
     public function form(): Response
     {
+        View::share('seo', SeoBuilder::forContribute());
+
         return Inertia::render('Contribute/Form', [
             'types' => collect(self::ALLOWED_TYPES)
                 ->map(fn ($label, $value) => ['value' => $value, 'label' => $label])

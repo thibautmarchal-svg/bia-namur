@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Resources\BriefResource;
 use App\Models\Brief;
 use App\Models\City;
+use App\Support\Seo\SeoBuilder;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,6 +15,8 @@ class BriefController extends Controller
 {
     public function index(): Response
     {
+        View::share('seo', SeoBuilder::forBriefsIndex());
+
         $namur = City::where('slug', 'namur')->firstOrFail();
 
         $statusFilter = app()->environment('local')
@@ -54,8 +58,11 @@ class BriefController extends Controller
                 'items' => fn ($q) => $q->orderBy('position'),
                 'items.event:id,title,starts_at',
                 'items.place:id,slug,name',
+                'photos',
             ])
             ->firstOrFail();
+
+        View::share('seo', SeoBuilder::forBrief($brief));
 
         return Inertia::render('Briefs/Show', [
             'brief' => BriefResource::make($brief),

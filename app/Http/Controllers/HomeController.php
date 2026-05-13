@@ -8,6 +8,8 @@ use App\Models\Brief;
 use App\Models\City;
 use App\Models\Place;
 use App\Models\Story;
+use App\Support\Seo\SeoBuilder;
+use Illuminate\Support\Facades\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,6 +17,8 @@ class HomeController extends Controller
 {
     public function __invoke(): Response
     {
+        View::share('seo', SeoBuilder::forHome());
+
         $namur = City::where('slug', 'namur')->firstOrFail();
 
         // Le brief le plus récent (en local : on tolère draft_ai pour valider sans publier).

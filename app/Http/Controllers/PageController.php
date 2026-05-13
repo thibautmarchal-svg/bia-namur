@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Story;
+use App\Support\Seo\SeoBuilder;
+use Illuminate\Support\Facades\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -10,6 +12,8 @@ class PageController extends Controller
 {
     public function wallon(): Response
     {
+        View::share('seo', SeoBuilder::forWallon());
+
         $words = config('bia-wallon.words', []);
         $families = config('bia-wallon.families', []);
         $externalLinks = config('bia-wallon.external_links', []);
@@ -34,11 +38,15 @@ class PageController extends Controller
 
     public function about(): Response
     {
+        View::share('seo', SeoBuilder::forAbout());
+
         return Inertia::render('About');
     }
 
     public function legalMentions(): \Symfony\Component\HttpFoundation\Response
     {
+        View::share('seo', SeoBuilder::forLegal('mentions'));
+
         return $this->withNoIndex(Inertia::render('Legal/Mentions', [
             'updatedAt' => '2026-05-07',
         ]));
@@ -46,6 +54,8 @@ class PageController extends Controller
 
     public function legalTerms(): \Symfony\Component\HttpFoundation\Response
     {
+        View::share('seo', SeoBuilder::forLegal('terms'));
+
         return $this->withNoIndex(Inertia::render('Legal/Terms', [
             'updatedAt' => '2026-05-07',
         ]));
@@ -53,6 +63,8 @@ class PageController extends Controller
 
     public function legalPrivacy(): \Symfony\Component\HttpFoundation\Response
     {
+        View::share('seo', SeoBuilder::forLegal('privacy'));
+
         return $this->withNoIndex(Inertia::render('Legal/Privacy', [
             'updatedAt' => '2026-05-07',
         ]));
