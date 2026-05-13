@@ -19,6 +19,7 @@ use App\Models\Brief;
 use App\Services\Telegram\TelegramNotifier;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -245,6 +246,51 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
+
+// Endpoint test SMTP : envoie un mail "ping" a une adresse arbitraire
+// et retourne le diagnostic clair (config + resultat + exception eventuelle).
+// Usage : GET /_deploy/mail-test?secret=...&to=tmarchal@cblue.be
+Route::match(['get', 'post'], '/_deploy/mail-test', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $to = (string) request()->input('to', '');
+    if (empty($to)) {
+        return response('Missing param: to', 400)->header('Content-Type', 'text/plain');
+    }
+
+    $diag = [
+        'mailer' => config('mail.default'),
+        'host' => config('mail.mailers.smtp.host'),
+        'port' => config('mail.mailers.smtp.port'),
+        'username' => config('mail.mailers.smtp.username'),
+        'encryption' => config('mail.mailers.smtp.encryption') ?? '(none)',
+        'from_address' => config('mail.from.address'),
+        'from_name' => config('mail.from.name'),
+        'to' => $to,
+    ];
+
+    try {
+        Mail::raw(
+            'Ping de Bia Namur — diagnostic SMTP a ' . now()->toIso8601String(),
+            function ($message) use ($to) {
+                $message->to($to)->subject('Bia Namur — Test SMTP');
+            },
+        );
+
+        $diag['status'] = 'SUCCESS';
+        $diag['note'] = 'Mail accepte par le mailer Laravel. Verifie ta boite (et le spam).';
+    } catch (Throwable $e) {
+        $diag['status'] = 'FAILED';
+        $diag['error_class'] = get_class($e);
+        $diag['error_message'] = $e->getMessage();
+    }
+
+    return response(json_encode($diag, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), 200)
+        ->header('Content-Type', 'application/json');
+})->middleware('throttle:10,1');
 
 // Endpoint test pour declencher manuellement une notif Telegram pour
 // le dernier brief en DB (utile pour valider le setup sans attendre
