@@ -204,12 +204,20 @@ class JsonLdBuilder
             config('bia.organization.linkedin'),
         ]);
 
+        // Logo carre 512x512 (Google exige carre ou presque, min 112x112
+        // pour afficher le logo dans les SERP a cote du nom du site).
+        // L'image OG 1200x630 ne convient PAS comme logo.
         $payload = [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
             'name' => 'Bia Namur',
             'url' => url('/'),
-            'logo' => url('/images/og/bia-namur-default.png'),
+            'logo' => [
+                '@type' => 'ImageObject',
+                'url' => url('/icons/icon-512.png'),
+                'width' => 512,
+                'height' => 512,
+            ],
         ];
 
         if (! empty($sameAs)) {
@@ -227,7 +235,9 @@ class JsonLdBuilder
             'url' => url('/'),
             'logo' => [
                 '@type' => 'ImageObject',
-                'url' => url('/images/og/bia-namur-default.png'),
+                'url' => url('/icons/icon-512.png'),
+                'width' => 512,
+                'height' => 512,
             ],
         ];
     }
