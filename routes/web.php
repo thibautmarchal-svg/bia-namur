@@ -271,7 +271,7 @@ Route::match(['get', 'post'], '/_deploy/cache-refresh', function () {
 
     return response('<pre>' . e($output) . '</pre>')
         ->header('Content-Type', 'text/html; charset=utf-8');
-})->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
+})->withoutMiddleware([ThrottleRequests::class]);
 
 // Endpoint utilitaire : flush tous les rate limiters Laravel (table cache).
 // Utile en debug quand on a spamme une route et qu'on est throttled
