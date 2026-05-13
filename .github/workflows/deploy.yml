@@ -98,12 +98,16 @@ jobs:
           QUEUE_CONNECTION=database
           CACHE_STORE=database
 
-          MAIL_MAILER="${{ secrets.MAIL_MAILER }}"
+          # MAIL_MAILER et MAIL_ENCRYPTION hardcoded car ces valeurs ne
+          # bougent jamais en prod OVH (smtp + ssl pour port 465). Evite
+          # le bug "Mailer [] is not defined" quand le secret GitHub
+          # correspondant est vide ou pas defini.
+          MAIL_MAILER=smtp
           MAIL_HOST="${{ secrets.MAIL_HOST }}"
           MAIL_PORT="${{ secrets.MAIL_PORT }}"
           MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}"
           MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"
-          MAIL_ENCRYPTION="${{ secrets.MAIL_ENCRYPTION }}"
+          MAIL_ENCRYPTION=ssl
           MAIL_FROM_ADDRESS=contact@bianamur.be
           MAIL_FROM_NAME="Bia Namur"
 
