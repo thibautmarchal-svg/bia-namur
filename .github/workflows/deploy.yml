@@ -111,6 +111,11 @@ jobs:
           BIA_CLOUDFLARE_BEACON_TOKEN=${{ secrets.BIA_CLOUDFLARE_BEACON_TOKEN }}
 
           BIA_DEPLOY_SECRET=${{ secrets.BIA_DEPLOY_SECRET }}
+
+          TELEGRAM_ENABLED=${{ secrets.TELEGRAM_ENABLED || 'false' }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID=${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          TELEGRAM_WEBHOOK_SECRET=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
           EOF
 
       - name: Build frontend (Vite + PWA)

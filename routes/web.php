@@ -13,6 +13,7 @@ use App\Http\Controllers\PushController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
+use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Middleware\RecordPageView;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
@@ -232,3 +233,13 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 
     return response('OK', 200)->header('Content-Type', 'text/plain');
 })->middleware('throttle:120,1');
+
+// ─── Webhook Telegram ─────────────────────────────────────────────────
+// Receive les callback_query (clic sur boutons inline) du bot Bia Namur.
+// L'URL contient un secret (cf. TELEGRAM_WEBHOOK_SECRET) pour qu'aucun
+// random ne puisse poster ici. Le controller verifie aussi le chat_id
+// pour bloquer les messages d'autres utilisateurs Telegram.
+// CSRF disabled : Telegram ne peut pas attacher de token CSRF.
+Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
+    ->name('webhooks.telegram')
+    ->middleware('throttle:60,1');

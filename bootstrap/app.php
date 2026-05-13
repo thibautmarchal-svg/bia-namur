@@ -17,6 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
             ShareSeoDefaults::class,
             HandleInertiaRequests::class,
         ]);
+
+        // Bypass CSRF pour les endpoints webhook : Telegram et autres
+        // services externes ne peuvent pas attacher de token CSRF.
+        // L'auth se fait via secret en URL + verification additionnelle
+        // (chat_id pour Telegram, signature pour d'autres webhooks).
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/telegram/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

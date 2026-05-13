@@ -35,6 +35,7 @@ class Brief extends Model
         'reviewed_at',
         'published_at',
         'selected_event_ids',
+        'telegram_message_id',
     ];
 
     protected function casts(): array
