@@ -290,7 +290,7 @@ Route::match(['get', 'post'], '/_deploy/mail-test', function () {
 
     return response(json_encode($diag, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), 200)
         ->header('Content-Type', 'application/json');
-})->middleware('throttle:10,1');
+})->middleware('throttle:60,1');
 
 // Endpoint test pour declencher manuellement une notif Telegram pour
 // le dernier brief en DB (utile pour valider le setup sans attendre
