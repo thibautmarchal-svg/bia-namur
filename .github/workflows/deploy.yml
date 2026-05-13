@@ -245,6 +245,23 @@ jobs:
               }
           }
 
+          // CRITICAL : supprimer physiquement les caches Laravel compiles
+          // (routes/config/services/packages/views). Sans ca, OPcache PHP-FPM
+          // peut garder l'ancienne version en memoire et servir du code
+          // pre-deploy meme apres extraction (selon le worker qui repond).
+          // En supprimant le fichier, le PHP-FPM stat() voit qu'il n'existe
+          // plus et OPcache invalide sa cache automatiquement.
+          $cacheDir = __DIR__ . '/bootstrap/cache';
+          if (is_dir($cacheDir)) {
+              $count = 0;
+              foreach ((array) glob($cacheDir . '/*.php') as $f) {
+                  if (@unlink($f)) {
+                      $count++;
+                  }
+              }
+              echo "Cache files deleted: $count\n";
+          }
+
           if (function_exists('opcache_reset')) {
               opcache_reset();
               echo "OPcache reset\n";
