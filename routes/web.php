@@ -15,6 +15,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
 use App\Http\Middleware\RecordPageView;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -205,15 +206,29 @@ Route::post('/_deploy/extract', function () {
 })->middleware('throttle:3,60');
 
 // Endpoint scheduler pour cron externe (cron-job.org ou EasyCron).
-// Appele toutes les minutes via POST avec le secret. Laravel decide
+// Appele toutes les minutes via GET/POST avec le secret. Laravel decide
 // lui-meme si une tache doit s'executer a ce moment.
-Route::post('/_deploy/schedule', function () {
+//
+// IMPORTANT : on accepte GET ET POST. cron-job.org ping en GET par defaut,
+// et si on repondait 405 Method Not Allowed, la page d'erreur Laravel
+// depasse leur limite de taille de reponse ("Echec : sortie trop grande").
+//
+// Reponse volontairement minimale ("OK\n") : cron-job.org ne tronque pas
+// les sorties courtes et leur dashboard reste lisible. Le detail de ce qui
+// a tourne est dans les logs Laravel cote serveur.
+Route::match(['get', 'post'], '/_deploy/schedule', function () {
     $secret = request()->input('secret');
     if (! $secret || $secret !== config('bia.deploy.secret')) {
         abort(404);
     }
 
-    Artisan::call('schedule:run');
+    try {
+        Artisan::call('schedule:run');
+    } catch (\Throwable $e) {
+        Log::error('schedule.run_failed', ['error' => $e->getMessage()]);
 
-    return response()->json(['ran' => true, 'output' => Artisan::output()]);
+        return response('ERR', 200)->header('Content-Type', 'text/plain');
+    }
+
+    return response('OK', 200)->header('Content-Type', 'text/plain');
 })->middleware('throttle:120,1');

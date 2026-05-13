@@ -6,8 +6,8 @@ use App\Models\AiRun;
 use App\Models\Brief;
 use App\Models\BriefItem;
 use App\Models\City;
-use App\Models\Event;
 use App\Services\Ai\ClaudeApiService;
+use App\Services\Ingestion\NamurAgendaRssService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,14 +21,21 @@ use Illuminate\Support\Facades\Log;
  * Genere le brief hebdo d'une ville pour une semaine ISO.
  *
  * Flux (cf. brief §7.1) :
- *  1. Selectionne les events normalises de la semaine cible
- *  2. Construit le payload utilisateur pour Claude (events + meta)
+ *  1. Fetch le flux RSS officiel namur.be (NamurAgendaRssService)
+ *  2. Construit le payload utilisateur pour Claude (items RSS + meta semaine)
  *  3. Appelle ClaudeApiService::complete('brief_v1', $payload)
  *  4. Parse le JSON retourne, cree Brief + BriefItem en transaction
  *  5. Status = draft_ai (necessite relecture humaine avant publication)
  *
- * En S1 : execute en mode mock (BIA_AI_MOCK_MODE=true) → fixture
- *         tests/Fixtures/claude/brief_mock_v1.json. Pas d'appel reseau.
+ * Note J27 : on n'utilise PLUS la table events car aucune source structuree
+ * ne fonctionne (OpenData v2 dataset gele en 2018, RSS culturels en 404).
+ * Le RSS namur.be est la seule source vivante et ses items n'ont pas de
+ * date d'evenement structuree (uniquement dc:date = date de publication).
+ * Claude se debrouille pour decoder la date depuis le titre/description.
+ *
+ * Re-generation safe : si un brief existe pour cette semaine (meme soft-
+ * deleted), il est restaure et mis a jour plutot que d'echouer sur la
+ * contrainte unique (city_id, year, week_number).
  *
  * Retry : 3 tentatives avec backoff exponentiel (Laravel queue auto).
  */
@@ -47,29 +54,32 @@ class GenerateBriefJob implements ShouldQueue
         public readonly ?string $modelOverride = null,
     ) {}
 
-    public function handle(ClaudeApiService $claude): Brief
+    public function handle(ClaudeApiService $claude, NamurAgendaRssService $rss): Brief
     {
         $city = City::where('slug', $this->citySlug)->firstOrFail();
 
         $weekStart = Carbon::now()->setISODate($this->year, $this->weekNumber)->startOfWeek();
         $weekEnd = (clone $weekStart)->endOfWeek();
 
-        $events = Event::query()
-            ->where('city_id', $city->id)
-            ->whereIn('status', [Event::STATUS_NORMALIZED, Event::STATUS_INGESTED])
-            ->whereBetween('starts_at', [$weekStart, $weekEnd])
-            ->orderBy('starts_at')
-            ->get();
+        $items = $rss->fetchItems(50);
 
-        $userPayload = $this->buildUserPayload($events, $weekStart, $weekEnd);
+        $userPayload = $this->buildUserPayload($items, $weekStart, $weekEnd);
         $briefSlug = sprintf('%d-W%02d', $this->year, $this->weekNumber);
 
         Log::info('brief.generation.started', [
             'city' => $city->slug,
             'year' => $this->year,
             'week' => $this->weekNumber,
-            'events_count' => $events->count(),
+            'rss_items_count' => count($items),
         ]);
+
+        if (empty($items)) {
+            Log::warning('brief.generation.no_items', [
+                'city' => $city->slug,
+                'year' => $this->year,
+                'week' => $this->weekNumber,
+            ]);
+        }
 
         $completion = $claude->complete(
             promptKey: 'brief_v1',
@@ -80,40 +90,39 @@ class GenerateBriefJob implements ShouldQueue
 
         $payload = $completion->toJson();
 
-        return DB::transaction(function () use ($city, $briefSlug, $payload, $completion, $events) {
-            $brief = Brief::updateOrCreate(
-                [
-                    'city_id' => $city->id,
-                    'year' => $this->year,
-                    'week_number' => $this->weekNumber,
-                ],
-                [
-                    'slug' => $briefSlug,
-                    'title' => "Cette semaine à {$city->name} — semaine {$this->weekNumber}",
-                    'intro_text' => $payload['intro'] ?? null,
-                    'generated_at' => now(),
-                    'status' => Brief::STATUS_DRAFT_AI,
-                    'selected_event_ids' => collect($payload['items'] ?? [])
-                        ->pluck('event_id')
-                        ->filter()
-                        ->values()
-                        ->all(),
-                ],
-            );
+        return DB::transaction(function () use ($city, $briefSlug, $payload, $completion) {
+            $brief = Brief::withTrashed()
+                ->where('city_id', $city->id)
+                ->where('year', $this->year)
+                ->where('week_number', $this->weekNumber)
+                ->first();
+
+            $attributes = [
+                'city_id' => $city->id,
+                'year' => $this->year,
+                'week_number' => $this->weekNumber,
+                'slug' => $briefSlug,
+                'title' => "Cette semaine à {$city->name} — semaine {$this->weekNumber}",
+                'intro_text' => $payload['intro'] ?? null,
+                'generated_at' => now(),
+                'status' => Brief::STATUS_DRAFT_AI,
+            ];
+
+            if ($brief) {
+                if ($brief->trashed()) {
+                    $brief->restore();
+                }
+                $brief->update($attributes);
+            } else {
+                $brief = Brief::create($attributes);
+            }
 
             // Reset des items existants si re-generation
             $brief->items()->delete();
 
-            $eventLookup = $events->keyBy('id');
-
             foreach ($payload['items'] ?? [] as $position => $item) {
-                $eventId = $item['event_id'] ?? null;
-                $linkedEvent = $eventId ? $eventLookup->get($eventId) : null;
-
                 BriefItem::create([
                     'brief_id' => $brief->id,
-                    'event_id' => $linkedEvent?->id,
-                    'place_id' => $linkedEvent?->place_id,
                     'position' => $position + 1,
                     'ai_text' => $this->formatItemAsMarkdown($item),
                     'reasoning' => [
@@ -146,26 +155,29 @@ class GenerateBriefJob implements ShouldQueue
     /**
      * Construit le payload texte qui sera envoye a Claude comme user message.
      * Aucun PII utilisateur, uniquement des donnees publiques d'events.
+     *
+     * @param  array<int, array{title:string, link:string, description:string, date:?string}>  $items
      */
-    protected function buildUserPayload($events, Carbon $weekStart, Carbon $weekEnd): string
+    protected function buildUserPayload(array $items, Carbon $weekStart, Carbon $weekEnd): string
     {
-        $eventsForPrompt = $events->map(fn (Event $e) => [
-            'id' => $e->id,
-            'title' => $e->title,
-            'description' => mb_substr((string) $e->description, 0, 400),
-            'starts_at' => $e->starts_at?->toIso8601String(),
-            'ends_at' => $e->ends_at?->toIso8601String(),
-            'venue' => $e->venue_name,
-            'category' => $e->category,
-            'price_info' => $e->price_info,
-            'source' => $e->source,
-        ])->toArray();
+        $now = now('Europe/Brussels');
 
-        return json_encode([
-            'date_debut' => $weekStart->toDateString(),
-            'date_fin' => $weekEnd->toDateString(),
-            'events' => $eventsForPrompt,
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $payload = [
+            'date_aujourdhui' => $now->toDateString(),
+            'semaine_debut' => $weekStart->toDateString(),
+            'semaine_fin' => $weekEnd->toDateString(),
+            'events_disponibles' => $items,
+        ];
+
+        return "Voici les events publiés par la Ville de Namur sur son agenda officiel.\n\n"
+            . "DATE AUJOURD'HUI : {$payload['date_aujourdhui']}\n"
+            . "SEMAINE BRIEF : du {$payload['semaine_debut']} au {$payload['semaine_fin']}\n\n"
+            . "INSTRUCTION : sélectionne 5 à 7 events qui se passent CETTE SEMAINE OU TRÈS BIENTÔT "
+            . "(les events ont leur date dans le titre ou la description — utilise ces indices).\n"
+            . "Diversifie les types : concert, expo, balade nature, théâtre, marché, gastronomie, patrimoine.\n"
+            . "Rédige le brief Bia Namur (intro + items + outro) en respectant le ton namurois chaleureux.\n\n"
+            . "DONNÉES :\n"
+            . json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
     protected function formatItemAsMarkdown(array $item): string

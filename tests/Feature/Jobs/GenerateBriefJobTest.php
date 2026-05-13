@@ -5,9 +5,8 @@ use App\Models\AiRun;
 use App\Models\Brief;
 use App\Models\BriefItem;
 use App\Models\City;
-use App\Models\Event;
 use App\Services\Ai\ClaudeApiService;
-use Carbon\Carbon;
+use App\Services\Ingestion\NamurAgendaRssService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 beforeEach(function () {
@@ -21,26 +20,26 @@ beforeEach(function () {
         'primary_color' => '#C77F2C',
     ]);
 
-    // Cree 3 events factices pour la semaine ISO 19 de 2026
-    $weekStart = Carbon::now()->setISODate(2026, 19)->startOfWeek();
-    foreach (range(1, 3) as $i) {
-        Event::create([
-            'city_id' => $this->city->id,
-            'source' => 'test',
-            'external_id' => "test-{$i}",
-            'title' => "Evenement test {$i}",
-            'description' => 'Description courte de l\'evenement',
-            'starts_at' => (clone $weekStart)->addDays($i),
-            'venue_name' => 'Venue test',
-            'category' => ['test'],
-            'status' => Event::STATUS_NORMALIZED,
-        ]);
-    }
+    // Fake RSS service qui retourne quelques items factices namurois.
+    // On evite tout appel reseau a namur.be dans la suite Pest.
+    $this->fakeRss = new class extends NamurAgendaRssService
+    {
+        public function fetchItems(int $limit = 50): array
+        {
+            return [
+                ['title' => 'Marché du dimanche au Grognon', 'link' => 'https://namur.be/1', 'description' => 'Marché dominical', 'date' => '2026-05-10'],
+                ['title' => 'Concert Sweet Lord Trio', 'link' => 'https://namur.be/2', 'description' => 'Jazz au Belvédère', 'date' => '2026-05-11'],
+                ['title' => 'Vernissage carnets de voyage', 'link' => 'https://namur.be/3', 'description' => 'Expo MCN', 'date' => '2026-05-12'],
+                ['title' => 'Balade nature à la confluence', 'link' => 'https://namur.be/4', 'description' => 'Pont des Ardennes', 'date' => '2026-05-13'],
+                ['title' => 'Dégustation asperges', 'link' => 'https://namur.be/5', 'description' => 'Bia Bouquet', 'date' => '2026-05-14'],
+            ];
+        }
+    };
 });
 
 it('generates a brief with items from the mock fixture', function () {
     $job = new GenerateBriefJob('namur', 2026, 19);
-    $brief = $job->handle(new ClaudeApiService(mockMode: true));
+    $brief = $job->handle(new ClaudeApiService(mockMode: true), $this->fakeRss);
 
     expect($brief)->toBeInstanceOf(Brief::class)
         ->and($brief->city_id)->toBe($this->city->id)
@@ -62,17 +61,31 @@ it('generates a brief with items from the mock fixture', function () {
 it('is idempotent : re-runs replace items, not duplicate the brief', function () {
     $job = new GenerateBriefJob('namur', 2026, 19);
 
-    $brief1 = $job->handle(new ClaudeApiService(mockMode: true));
-    $brief2 = $job->handle(new ClaudeApiService(mockMode: true));
+    $brief1 = $job->handle(new ClaudeApiService(mockMode: true), $this->fakeRss);
+    $brief2 = $job->handle(new ClaudeApiService(mockMode: true), $this->fakeRss);
 
     expect(Brief::count())->toBe(1)
         ->and($brief1->id)->toBe($brief2->id)
         ->and(BriefItem::count())->toBe(6); // pas double
 });
 
+it('restores a soft-deleted brief for the same week instead of failing', function () {
+    $job = new GenerateBriefJob('namur', 2026, 19);
+
+    $brief1 = $job->handle(new ClaudeApiService(mockMode: true), $this->fakeRss);
+    $brief1->delete();
+    expect($brief1->fresh()->trashed())->toBeTrue();
+
+    $brief2 = $job->handle(new ClaudeApiService(mockMode: true), $this->fakeRss);
+
+    expect(Brief::count())->toBe(1)
+        ->and($brief1->id)->toBe($brief2->id)
+        ->and($brief2->trashed())->toBeFalse();
+});
+
 it('records ai_runs trace and links it to the brief polymorphically', function () {
     $job = new GenerateBriefJob('namur', 2026, 19);
-    $brief = $job->handle(new ClaudeApiService(mockMode: true));
+    $brief = $job->handle(new ClaudeApiService(mockMode: true), $this->fakeRss);
 
     $aiRun = AiRun::latest('id')->first();
 
@@ -82,17 +95,9 @@ it('records ai_runs trace and links it to the brief polymorphically', function (
         ->and($aiRun->related_id)->toBe($brief->id);
 });
 
-it('stores selected event ids in the brief', function () {
-    $job = new GenerateBriefJob('namur', 2026, 19);
-    $brief = $job->handle(new ClaudeApiService(mockMode: true));
-
-    expect($brief->selected_event_ids)->toBeArray()
-        ->and($brief->selected_event_ids)->toHaveCount(6); // 6 items dans la fixture
-});
-
 it('fails clearly when the city does not exist', function () {
     $job = new GenerateBriefJob('mons', 2026, 19);
 
-    expect(fn () => $job->handle(new ClaudeApiService(mockMode: true)))
+    expect(fn () => $job->handle(new ClaudeApiService(mockMode: true), $this->fakeRss))
         ->toThrow(ModelNotFoundException::class);
 });

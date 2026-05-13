@@ -72,3 +72,17 @@ id_ed25519*
 *.original.jpg
 *.original.png
 *.original.jpeg
+_extract.php
+_diag.php
+_migrate.php
+_seed.php
+_promote.php
+_ingest.php
+_ingest-v2.php
+_test-sources.php
+_check-events.php
+_check-datasets.php
+_generate-brief.php
+
+# PNG temporaires en racine (exports depuis assets-logo/*.svg)
+/facebook-cover.png

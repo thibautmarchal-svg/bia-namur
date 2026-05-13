@@ -4,22 +4,19 @@ namespace App\Console\Commands;
 
 use App\Jobs\GenerateBriefJob;
 use App\Models\AiRun;
-use App\Models\Brief;
 use App\Models\City;
-use App\Models\Event;
 use Illuminate\Console\Command;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
  * Lance le pipeline GenerateBriefJob en local pour tester sans queue.
- * Si --seed-events, cree quelques events factices namurois pour la
- * semaine ciblee (utile en S1 ou la table events est vide).
+ * Le job va fetch namur.be RSS + appeler Claude (ou la fixture mock).
  *
  * Exemples :
  *   php artisan bia:brief:generate-test
- *   php artisan bia:brief:generate-test --week=20 --seed-events
+ *   php artisan bia:brief:generate-test --week=20
  *   php artisan bia:brief:generate-test --city=namur --year=2026 --week=22
+ *   php artisan bia:brief:generate-test --model=claude-haiku-4-5
  */
 class GenerateBriefTestCommand extends Command
 {
@@ -27,8 +24,7 @@ class GenerateBriefTestCommand extends Command
         {--city=namur : slug de la ville}
         {--year= : annee (defaut : annee courante)}
         {--week= : numero de semaine ISO (defaut : semaine courante)}
-        {--model= : override le modele (ex: claude-haiku-4-5 si Sonnet sature)}
-        {--seed-events : injecte 8 events factices pour la semaine}';
+        {--model= : override le modele (ex: claude-haiku-4-5 si Sonnet sature)}';
 
     protected $description = 'Genere un brief hebdo en local (mode mock par defaut). À l\'aise.';
 
@@ -47,18 +43,6 @@ class GenerateBriefTestCommand extends Command
             return self::FAILURE;
         }
 
-        if ($this->option('seed-events')) {
-            $this->components->task('Seeding events factices', fn () => $this->seedFakeEvents($city, $year, $week));
-        }
-
-        $eventsCount = Event::where('city_id', $city->id)
-            ->whereBetween('starts_at', [
-                Carbon::now()->setISODate($year, $week)->startOfWeek(),
-                Carbon::now()->setISODate($year, $week)->endOfWeek(),
-            ])
-            ->count();
-
-        $this->components->info("Events disponibles cette semaine : {$eventsCount}");
         $this->components->info('Mode mock : ' . (config('bia.ai.mock_mode') ? 'OUI (fixtures)' : 'NON (vrai SDK)'));
 
         $modelOverride = $this->option('model');
@@ -110,49 +94,5 @@ class GenerateBriefTestCommand extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Cree 8 events namurois factices pour la semaine cible (idempotent
-     * via external_id). Usage : tests visuels du pipeline en local.
-     */
-    protected function seedFakeEvents(City $city, int $year, int $week): void
-    {
-        $weekStart = Carbon::now()->setISODate($year, $week)->startOfWeek();
-
-        $samples = [
-            ['Marché du dimanche au Grognon', 'Le Grognon', '+0 days 8:00', '+0 days 13:00', 'opendata', 'marché'],
-            ['Vernissage : carnets de voyage', 'Maison de la Culture Bomel', '+5 days 18:30', '+5 days 21:00', 'rss_mcn', 'expo'],
-            ['Concert : Sweet Lord Trio', 'Le Belvédère', '+6 days 21:00', '+6 days 23:30', 'rss_belvedere', 'concert'],
-            ['Balade nature : la confluence à pied', 'Pont des Ardennes', '+6 days 10:00', '+6 days 13:00', 'opendata', 'nature'],
-            ['Conférence : Saintraint, l\'histoire d\'une rue', 'Bibliothèque communale', '+4 days 19:00', '+4 days 20:30', 'opendata', 'patrimoine'],
-            ['Dégustation : asperges blanches du moment', 'Le Bia Bouquet', '+3 days 19:30', '+3 days 22:30', 'manual', 'gastronomie'],
-            ['Spectacle jeunesse : Le voyage de Bia', 'Théâtre de Namur', '+2 days 14:00', '+2 days 15:30', 'rss_theatre', 'famille'],
-            ['Apéro littéraire : Saint-Loup', 'Église Saint-Loup', '+1 days 18:00', '+1 days 20:00', 'manual', 'culture'],
-        ];
-
-        foreach ($samples as $i => [$title, $venue, $startsOffset, $endsOffset, $source, $cat]) {
-            $startsAt = (clone $weekStart)->modify($startsOffset);
-            $endsAt = (clone $weekStart)->modify($endsOffset);
-
-            Event::updateOrCreate(
-                [
-                    'source' => $source,
-                    'external_id' => "fake-{$year}-W{$week}-{$i}",
-                ],
-                [
-                    'city_id' => $city->id,
-                    'title' => $title,
-                    'description' => "Evenement factice pour test pipeline brief — {$title}.",
-                    'starts_at' => $startsAt,
-                    'ends_at' => $endsAt,
-                    'venue_name' => $venue,
-                    'category' => [$cat],
-                    'price_info' => $i % 2 === 0 ? 'Gratuit' : '12€',
-                    'status' => Event::STATUS_NORMALIZED,
-                    'ingested_at' => now(),
-                ],
-            );
-        }
     }
 }
