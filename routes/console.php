@@ -42,6 +42,19 @@ Schedule::call(function () {
     ->withoutOverlapping()
     ->onOneServer();
 
+// Worker queue : execute les jobs en attente (SendBriefValidationNotifJob,
+// SendBriefPublishedNotificationJob, ModerateContributionJob, etc.).
+// --stop-when-empty : sort des qu'il n'y a plus rien en queue (sinon le
+//   process tourne indefiniment, incompatible avec mutualise sans SSH).
+// --max-time=50 : safety net pour ne pas depasser le timeout PHP (60s par
+//   defaut sur la plupart des shared hostings).
+// Appele chaque minute par le ping cron-job.org qui declenche schedule:run.
+Schedule::command('queue:work --stop-when-empty --tries=3 --max-time=50 --max-jobs=20')
+    ->name('queue:work')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer();
+
 /*
 | Auto-publish brief si pas relu : a activer plus tard quand on aura
 | confiance dans la qualite Claude. Pour l'instant le brief reste en

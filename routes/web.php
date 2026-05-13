@@ -15,6 +15,8 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Middleware\RecordPageView;
+use App\Models\Brief;
+use App\Services\Telegram\TelegramNotifier;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -243,3 +245,38 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
+
+// Endpoint test pour declencher manuellement une notif Telegram pour
+// le dernier brief en DB (utile pour valider le setup sans attendre
+// vendredi 14h). Protege par BIA_DEPLOY_SECRET.
+// Execute en SYNC (pas via queue) pour reponse immediate.
+Route::match(['get', 'post'], '/_deploy/telegram-test', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $brief = Brief::query()
+        ->orderByDesc('id')
+        ->first();
+
+    if (! $brief) {
+        return response('NO BRIEF IN DB', 404)->header('Content-Type', 'text/plain');
+    }
+
+    $notifier = app(TelegramNotifier::class);
+    $messageId = $notifier->sendBriefForValidation($brief);
+
+    if ($messageId === null) {
+        return response("TELEGRAM ERROR (verifie .env / logs)\n"
+            . 'enabled=' . (config('services.telegram.enabled') ? 'true' : 'false') . "\n"
+            . 'has_token=' . (config('services.telegram.bot_token') ? 'yes' : 'no') . "\n"
+            . 'has_chat_id=' . (config('services.telegram.admin_chat_id') ? 'yes' : 'no') . "\n", 500)
+            ->header('Content-Type', 'text/plain');
+    }
+
+    $brief->update(['telegram_message_id' => $messageId]);
+
+    return response("OK\nbrief_id={$brief->id}\nbrief_slug={$brief->slug}\ntelegram_message_id={$messageId}\n", 200)
+        ->header('Content-Type', 'text/plain');
+})->middleware('throttle:10,1');

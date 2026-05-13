@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Telegram\TelegramNotifier;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
 
 /**
  * Recupere les derniers messages recus par le bot pour aider l'admin
@@ -26,19 +26,46 @@ class TelegramGetUpdatesCommand extends Command
 
     protected $description = 'Recupere les derniers messages recus par le bot (utile pour trouver son chat_id).';
 
-    public function handle(TelegramNotifier $telegram): int
+    public function handle(): int
     {
+        // On lit le token directement depuis env() pour permettre d'appeler
+        // cette commande SANS TELEGRAM_ENABLED=true (juste pour trouver son
+        // chat_id au setup initial).
+        $token = (string) (env('TELEGRAM_BOT_TOKEN', '') ?: config('services.telegram.bot_token'));
+        if (empty($token)) {
+            $this->components->error('TELEGRAM_BOT_TOKEN vide dans .env.');
+            $this->newLine();
+            $this->line('  Ajoute dans ton .env :');
+            $this->line('    <fg=cyan>TELEGRAM_BOT_TOKEN=1234567890:AAExxxxxxxxxxxxxxxxxxxxxxxx</>');
+            $this->newLine();
+            $this->line('  (Token recu depuis @BotFather apres /newbot)');
+
+            return self::FAILURE;
+        }
+
         $this->components->info('Fetching last updates from Telegram...');
-        $updates = $telegram->getUpdates();
+
+        $response = Http::timeout(10)
+            ->get("https://api.telegram.org/bot{$token}/getUpdates");
+
+        if (! $response->successful()) {
+            $this->components->error('Erreur API : ' . $response->status() . ' — ' . $response->body());
+
+            return self::FAILURE;
+        }
+
+        $updates = $response->json('result') ?? [];
 
         if (empty($updates)) {
             $this->components->warn('Aucun message recu.');
             $this->newLine();
-            $this->line('  1. Verifie que TELEGRAM_BOT_TOKEN est defini dans .env');
-            $this->line('  2. Envoie un message a ton bot depuis Telegram');
-            $this->line('  3. Si setWebhook est deja configure, getUpdates est inactif :');
-            $this->line('     supprime temporairement le webhook via la BotFather, recommence,');
-            $this->line('     puis relance bia:telegram:set-webhook.');
+            $this->line('  1. Envoie n\'importe quel message a ton bot depuis Telegram');
+            $this->line('     (ex: cherche son @username sur Telegram, ouvre la conv, envoie "coucou")');
+            $this->line('  2. Relance cette commande');
+            $this->newLine();
+            $this->line('  Si setWebhook est deja configure, getUpdates est inactif :');
+            $this->line('  appelle deleteWebhook d\'abord :');
+            $this->line("    <fg=cyan>curl \"https://api.telegram.org/bot{TOKEN}/deleteWebhook\"</>");
 
             return self::SUCCESS;
         }
