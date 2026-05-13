@@ -60,15 +60,23 @@ jobs:
         run: npm ci
 
       # ─── Generation .env de prod (avant build car Vite lit VITE_*) ────
+      # Heredoc 'EOF' (single-quoted) pour desactiver l'expansion bash :
+      # si un secret contient un '$' (frequent dans les mots de passe), un
+      # heredoc non-quoted le ferait expand en variable bash vide. Avec
+      # 'EOF', le contenu est ecrit litteralement.
+      # Les substitutions ${{ secrets.XXX }} sont faites par GitHub Actions
+      # AVANT que bash voie le script, donc independantes du quoting heredoc.
+      # Les valeurs sont entre quotes pour gerer les espaces / # / = qui
+      # pourraient casser le parsing .env de Laravel.
       - name: Generate production .env
         run: |
-          cat > .env <<EOF
+          cat > .env <<'EOF'
           APP_NAME="Bia Namur"
           APP_ENV=production
-          APP_KEY=${{ secrets.APP_KEY }}
+          APP_KEY="${{ secrets.APP_KEY }}"
           APP_DEBUG=false
           APP_TIMEZONE=Europe/Brussels
-          APP_URL=${{ secrets.APP_URL }}
+          APP_URL="${{ secrets.APP_URL }}"
           APP_LOCALE=fr
           APP_FALLBACK_LOCALE=fr
           APP_FAKER_LOCALE=fr_BE
@@ -77,45 +85,45 @@ jobs:
           LOG_LEVEL=warning
 
           DB_CONNECTION=mysql
-          DB_HOST=${{ secrets.DB_HOST }}
+          DB_HOST="${{ secrets.DB_HOST }}"
           DB_PORT=3306
-          DB_DATABASE=${{ secrets.DB_DATABASE }}
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_DATABASE="${{ secrets.DB_DATABASE }}"
+          DB_USERNAME="${{ secrets.DB_USERNAME }}"
+          DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
           SESSION_DRIVER=database
           SESSION_LIFETIME=120
-          SESSION_DOMAIN=${{ secrets.SESSION_DOMAIN }}
+          SESSION_DOMAIN="${{ secrets.SESSION_DOMAIN }}"
 
           QUEUE_CONNECTION=database
           CACHE_STORE=database
 
-          MAIL_MAILER=${{ secrets.MAIL_MAILER }}
-          MAIL_HOST=${{ secrets.MAIL_HOST }}
-          MAIL_PORT=${{ secrets.MAIL_PORT }}
-          MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-          MAIL_ENCRYPTION=${{ secrets.MAIL_ENCRYPTION }}
+          MAIL_MAILER="${{ secrets.MAIL_MAILER }}"
+          MAIL_HOST="${{ secrets.MAIL_HOST }}"
+          MAIL_PORT="${{ secrets.MAIL_PORT }}"
+          MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}"
+          MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"
+          MAIL_ENCRYPTION="${{ secrets.MAIL_ENCRYPTION }}"
           MAIL_FROM_ADDRESS=contact@bianamur.be
           MAIL_FROM_NAME="Bia Namur"
 
           BIA_AI_MOCK_MODE=false
-          ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}"
 
           BIA_PUSH_ENABLED=true
           BIA_PUSH_FAKE=false
-          BIA_VAPID_PUBLIC_KEY=${{ secrets.BIA_VAPID_PUBLIC_KEY }}
-          BIA_VAPID_PRIVATE_KEY=${{ secrets.BIA_VAPID_PRIVATE_KEY }}
+          BIA_VAPID_PUBLIC_KEY="${{ secrets.BIA_VAPID_PUBLIC_KEY }}"
+          BIA_VAPID_PRIVATE_KEY="${{ secrets.BIA_VAPID_PRIVATE_KEY }}"
           BIA_VAPID_SUBJECT=mailto:contact@bianamur.be
 
-          BIA_CLOUDFLARE_BEACON_TOKEN=${{ secrets.BIA_CLOUDFLARE_BEACON_TOKEN }}
+          BIA_CLOUDFLARE_BEACON_TOKEN="${{ secrets.BIA_CLOUDFLARE_BEACON_TOKEN }}"
 
-          BIA_DEPLOY_SECRET=${{ secrets.BIA_DEPLOY_SECRET }}
+          BIA_DEPLOY_SECRET="${{ secrets.BIA_DEPLOY_SECRET }}"
 
           TELEGRAM_ENABLED=${{ secrets.TELEGRAM_ENABLED || 'false' }}
-          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_ADMIN_CHAT_ID=${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
-          TELEGRAM_WEBHOOK_SECRET=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
+          TELEGRAM_ADMIN_CHAT_ID="${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}"
+          TELEGRAM_WEBHOOK_SECRET="${{ secrets.TELEGRAM_WEBHOOK_SECRET }}"
           EOF
 
       - name: Build frontend (Vite + PWA)
