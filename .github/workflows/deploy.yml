@@ -247,6 +247,10 @@ jobs:
           ls -lh _ftp_stage/
 
       # ─── FTP upload (archive + extractor, ~50 MB, ~2 min) ─────────────
+      # IMPORTANT : state-name unique par run (run_id) + dangerous-clean-slate
+      # car _extract.php s'auto-delete cote serveur apres usage. Sans force
+      # upload, FTP Deploy Action skip le fichier car son state dit "deja
+      # deploye" → l'extractor est absent → step suivant (curl extract) plante.
       - name: Upload archive via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -255,10 +259,10 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./_ftp_stage/
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          # Pas de state file car 1 seul fichier a chaque fois
-          state-name: .ftp-deploy-archive-state.json
-          # Pas d'exclusion necessaire, le local-dir contient juste l'archive
-          dangerous-clean-slate: false
+          # State name unique par run → force upload tous les fichiers
+          state-name: .ftp-deploy-${{ github.run_id }}.json
+          # Force aussi l'upload meme si le fichier existe deja
+          dangerous-clean-slate: true
 
       # ─── Extract sur le serveur (via le standalone _extract.php) ─────
       # -L : suit les redirects (HTTP→HTTPS notamment)
