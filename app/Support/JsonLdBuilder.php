@@ -214,7 +214,7 @@ class JsonLdBuilder
             'url' => url('/'),
             'logo' => [
                 '@type' => 'ImageObject',
-                'url' => url('/icons/icon-512.png'),
+                'url' => url('/pwa-icons/icon-512.png'),
                 'width' => 512,
                 'height' => 512,
             ],
@@ -235,7 +235,7 @@ class JsonLdBuilder
             'url' => url('/'),
             'logo' => [
                 '@type' => 'ImageObject',
-                'url' => url('/icons/icon-512.png'),
+                'url' => url('/pwa-icons/icon-512.png'),
                 'width' => 512,
                 'height' => 512,
             ],

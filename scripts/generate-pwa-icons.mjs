@@ -2,7 +2,7 @@
  * Génère les icônes PWA PNG depuis le logo SVG Bia Namur.
  *
  * Inputs : assets-logo/logo-mark-512.svg, assets-logo/logo-maskable-512.svg
- * Outputs : public/icons/{icon-192,icon-512,icon-maskable-512,apple-touch-icon}.png
+ * Outputs : public/pwa-icons/{icon-192,icon-512,icon-maskable-512,apple-touch-icon}.png
  *           public/favicon-32.png
  *
  * Usage : node scripts/generate-pwa-icons.mjs
@@ -18,7 +18,7 @@ const ROOT = resolve(__dirname, '..');
 
 const LOGO_MARK = resolve(ROOT, 'assets-logo/logo-mark-512.svg');
 const LOGO_MASKABLE = resolve(ROOT, 'assets-logo/logo-maskable-512.svg');
-const OUT_DIR = resolve(ROOT, 'public/icons');
+const OUT_DIR = resolve(ROOT, 'public/pwa-icons');
 const PUBLIC_DIR = resolve(ROOT, 'public');
 
 const BIA_CREAM = '#F5EDDC';

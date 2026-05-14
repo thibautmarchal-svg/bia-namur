@@ -22,8 +22,8 @@ self.addEventListener('push', (event) => {
     const title = payload.title || 'Bia Namur';
     const options = {
         body: payload.body || '',
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
+        icon: '/pwa-icons/icon-192.png',
+        badge: '/pwa-icons/icon-192.png',
         lang: 'fr',
         tag: payload.tag || 'bia-default',
         renotify: false,

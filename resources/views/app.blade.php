@@ -43,7 +43,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/pwa-icons/apple-touch-icon.png">
 
     {{-- PWA manifest : present uniquement en build prod (Vite l'a genere dans /build) --}}
     @if (file_exists(public_path('build/manifest.webmanifest')))
