@@ -250,6 +250,50 @@ Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
 
+// Endpoint admin : nettoie les dossiers vides a la racine du serveur
+// (ex: /icons/, /build/, /images/) qui interceptent mod_dir avant que
+// mod_rewrite redirige vers public/. Symptome : /icons/apple-touch-icon.png
+// retourne 404 alors que public/icons/apple-touch-icon.png existe.
+Route::match(['get', 'post'], '/_deploy/cleanup-stale-dirs', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    // base_path = la racine du wrapper (cf. .htaccess RewriteRule)
+    // Les fichiers Laravel sont dans base_path() et public/ est dedans.
+    // Les dossiers a nettoyer sont les eventuels reliquats vides au meme
+    // niveau que public/.
+    $root = base_path();
+    $candidates = ['icons', 'build', 'images', 'storage', 'fonts'];
+    $report = [];
+
+    foreach ($candidates as $name) {
+        $path = $root . DIRECTORY_SEPARATOR . $name;
+        if (! is_dir($path)) {
+            $report[] = "skip $name (not exist at root)";
+
+            continue;
+        }
+        // Securite : ne pas effacer si non-vide
+        $contents = @scandir($path);
+        $contents = array_diff($contents ?: [], ['.', '..']);
+        if (! empty($contents)) {
+            $report[] = "skip $name (not empty: " . count($contents) . ' items)';
+
+            continue;
+        }
+        if (@rmdir($path)) {
+            $report[] = "DELETED $name";
+        } else {
+            $report[] = "failed $name (rmdir error)";
+        }
+    }
+
+    return response("CLEANUP REPORT\n\n" . implode("\n", $report) . "\n", 200)
+        ->header('Content-Type', 'text/plain');
+})->withoutMiddleware([ThrottleRequests::class]);
+
 // Endpoint variante GET de /_deploy/cache pour debug sans tomber sur le
 // throttle 3/60 min (qui peut bloquer l'admin en debug iteratif).
 Route::match(['get', 'post'], '/_deploy/cache-refresh', function () {
