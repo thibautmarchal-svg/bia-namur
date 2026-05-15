@@ -251,6 +251,42 @@ Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
 
+// Endpoint admin : (re)configure le webhook Telegram avec la bonne URL
+// (utilise le TELEGRAM_WEBHOOK_SECRET courant du .env serveur, pas un
+// secret qu'on saisirait au hasard depuis le client).
+Route::match(['get', 'post'], '/_deploy/telegram-set-webhook', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $token = (string) config('services.telegram.bot_token');
+    $webhookSecret = (string) config('services.telegram.webhook_secret');
+
+    if (empty($token) || empty($webhookSecret)) {
+        return response()->json([
+            'error' => 'Token ou webhook_secret vide en prod',
+            'has_token' => ! empty($token),
+            'has_webhook_secret' => ! empty($webhookSecret),
+        ], 500);
+    }
+
+    $webhookUrl = url('/webhooks/telegram/' . $webhookSecret);
+
+    $response = Http::asJson()
+        ->timeout(15)
+        ->post("https://api.telegram.org/bot{$token}/setWebhook", [
+            'url' => $webhookUrl,
+            'allowed_updates' => ['callback_query'],
+            'drop_pending_updates' => true,
+        ]);
+
+    return response()->json([
+        'configured_url' => preg_replace('/\/[a-f0-9]{20,}$/', '/...(masked)', $webhookUrl),
+        'telegram_response' => $response->json(),
+    ], 200, [], JSON_PRETTY_PRINT);
+})->withoutMiddleware([ThrottleRequests::class]);
+
 // Endpoint diagnostic Telegram webhook : retourne le statut côté Telegram
 // (URL configurée + last_error si Telegram a tenté de POST et a échoué).
 Route::match(['get', 'post'], '/_deploy/telegram-webhook-info', function () {
