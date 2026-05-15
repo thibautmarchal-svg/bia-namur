@@ -21,6 +21,7 @@ use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -249,6 +250,32 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
+
+// Endpoint diagnostic Telegram webhook : retourne le statut côté Telegram
+// (URL configurée + last_error si Telegram a tenté de POST et a échoué).
+Route::match(['get', 'post'], '/_deploy/telegram-webhook-info', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $token = (string) config('services.telegram.bot_token');
+    if (empty($token)) {
+        return response()->json(['error' => 'TELEGRAM_BOT_TOKEN vide en prod'], 500);
+    }
+
+    $response = Http::timeout(10)
+        ->get("https://api.telegram.org/bot{$token}/getWebhookInfo");
+
+    return response()->json([
+        'webhook_info' => $response->json(),
+        'expected_url' => url('/webhooks/telegram/' . substr((string) config('services.telegram.webhook_secret'), 0, 8) . '…(masked)'),
+        'telegram_enabled' => config('services.telegram.enabled'),
+        'has_token' => ! empty(config('services.telegram.bot_token')),
+        'has_admin_chat_id' => ! empty(config('services.telegram.admin_chat_id')),
+        'has_webhook_secret' => ! empty(config('services.telegram.webhook_secret')),
+    ], 200, [], JSON_PRETTY_PRINT);
+})->withoutMiddleware([ThrottleRequests::class]);
 
 // Endpoint admin : nettoie les dossiers vides a la racine du serveur
 // (ex: /icons/, /build/, /images/) qui interceptent mod_dir avant que
