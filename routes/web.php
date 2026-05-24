@@ -15,6 +15,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Middleware\RecordPageView;
+use App\Models\AiRun;
 use App\Models\Brief;
 use App\Services\Telegram\TelegramNotifier;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 // Pages publiques editoriales
@@ -250,6 +252,120 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
+
+// Endpoint diagnostic complet du pipeline brief hebdo. Retourne l'etat
+// de chaque maillon de la chaine vendredi 14h → notif Telegram :
+//   1. Scheduler : dernier appel scheduler a-t-il bien eu lieu ?
+//   2. DB : un brief a-t-il ete cree cette semaine ?
+//   3. Queue : jobs en attente ou en echec ?
+//   4. ai_runs : Claude a-t-il tourne, succes ou erreur ?
+//   5. Logs : derniers messages avec prefixe brief.* et telegram.*
+//   6. Config : flags BIA_AI_MOCK_MODE, TELEGRAM_ENABLED, secrets presents
+Route::match(['get', 'post'], '/_deploy/brief-pipeline-status', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $now = now('Europe/Brussels');
+    $diag = [
+        'now' => $now->toIso8601String(),
+        'now_week' => sprintf('%d-W%02d', $now->year, $now->isoWeek()),
+    ];
+
+    // 1. Briefs : derniers 5 en DB (avec soft-deleted) pour voir si un brief
+    //    de cette semaine a ete cree ou pas.
+    try {
+        $briefs = Brief::withTrashed()
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get(['id', 'slug', 'year', 'week_number', 'status', 'generated_at', 'published_at', 'deleted_at', 'telegram_message_id']);
+        $diag['recent_briefs'] = $briefs->map(fn ($b) => [
+            'id' => $b->id,
+            'slug' => $b->slug,
+            'year_week' => "{$b->year}-W{$b->week_number}",
+            'status' => $b->status,
+            'generated_at' => $b->generated_at?->toIso8601String(),
+            'published_at' => $b->published_at?->toIso8601String(),
+            'deleted_at' => $b->deleted_at?->toIso8601String(),
+            'telegram_message_id' => $b->telegram_message_id,
+        ])->all();
+    } catch (Throwable $e) {
+        $diag['recent_briefs_error'] = $e->getMessage();
+    }
+
+    // 2. ai_runs : derniers 5 (succes ou echec) pour voir si Claude a tourne
+    try {
+        $runs = AiRun::orderByDesc('id')
+            ->limit(5)
+            ->get(['id', 'type', 'model_used', 'status', 'duration_ms', 'cost_usd', 'error_message', 'created_at']);
+        $diag['recent_ai_runs'] = $runs->map(fn ($r) => [
+            'id' => $r->id,
+            'type' => $r->type,
+            'model' => $r->model_used,
+            'status' => $r->status,
+            'duration_ms' => $r->duration_ms,
+            'cost_usd' => $r->cost_usd,
+            'error' => $r->error_message,
+            'created_at' => $r->created_at?->toIso8601String(),
+        ])->all();
+    } catch (Throwable $e) {
+        $diag['ai_runs_error'] = $e->getMessage();
+    }
+
+    // 3. Queue : jobs en attente + jobs failed (les 5 derniers)
+    try {
+        $diag['queue_pending_count'] = DB::table('jobs')->count();
+        $diag['queue_pending_sample'] = DB::table('jobs')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get(['id', 'queue', 'attempts', 'available_at', 'created_at'])
+            ->toArray();
+        $diag['failed_jobs_count'] = DB::table('failed_jobs')->count();
+        $diag['failed_jobs_sample'] = DB::table('failed_jobs')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get(['id', 'queue', 'exception', 'failed_at'])
+            ->map(fn ($j) => [
+                'id' => $j->id,
+                'queue' => $j->queue,
+                'exception_first_line' => Str::before($j->exception, "\n"),
+                'failed_at' => $j->failed_at,
+            ])
+            ->all();
+    } catch (Throwable $e) {
+        $diag['queue_error'] = $e->getMessage();
+    }
+
+    // 4. Config : flags critiques
+    $diag['config'] = [
+        'app_env' => app()->environment(),
+        'app_url' => config('app.url'),
+        'BIA_AI_MOCK_MODE' => config('bia.ai.mock_mode'),
+        'anthropic_key_present' => ! empty(config('services.anthropic.key')),
+        'telegram_enabled' => config('services.telegram.enabled'),
+        'telegram_token_present' => ! empty(config('services.telegram.bot_token')),
+        'telegram_chat_id_present' => ! empty(config('services.telegram.admin_chat_id')),
+        'telegram_webhook_secret_present' => ! empty(config('services.telegram.webhook_secret')),
+        'queue_connection' => config('queue.default'),
+    ];
+
+    // 5. Logs : derniers warnings/errors du jour pour brief* et telegram*
+    try {
+        $logPath = storage_path('logs/laravel-' . now()->format('Y-m-d') . '.log');
+        if (is_file($logPath)) {
+            $lines = file($logPath);
+            $relevant = array_filter($lines, fn ($l) => preg_match('/brief\.|telegram\.|GenerateBriefJob|SendBriefValidationNotif|schedule/i', $l));
+            $diag['recent_log_lines'] = array_values(array_slice($relevant, -10));
+        } else {
+            $diag['log_file'] = "absent ({$logPath})";
+        }
+    } catch (Throwable $e) {
+        $diag['log_error'] = $e->getMessage();
+    }
+
+    return response()->json($diag, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+})->withoutMiddleware([ThrottleRequests::class]);
 
 // Endpoint admin : (re)configure le webhook Telegram avec la bonne URL
 // (utilise le TELEGRAM_WEBHOOK_SECRET courant du .env serveur, pas un
