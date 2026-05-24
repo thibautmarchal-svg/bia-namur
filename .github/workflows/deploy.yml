@@ -361,3 +361,25 @@ jobs:
             | head -5 \
             && echo "Homepage OK" \
             || (echo "::error::Homepage smoke test failed" && exit 1)
+
+      # ─── Healthcheck dependances externes ──────────────────────────────
+      # Verifie que Anthropic API + Telegram Bot API + DB repondent avec
+      # la config courante. Si Anthropic 401 (cle revoquee) ou autre
+      # incident, le workflow fail explicitement et l'admin recoit aussi
+      # une alerte Telegram (si Telegram lui-meme repond).
+      # Strategie : on ne fail PAS le deploy si healthcheck KO (le code
+      # est deja extracte et fonctionnel cote front), mais on log
+      # l'erreur en warning et on alerte l'admin.
+      - name: Healthcheck externes (Anthropic + Telegram + DB)
+        run: |
+          set +e
+          RESPONSE=$(curl -sS -L --max-time 30 \
+            -d "secret=${{ secrets.BIA_DEPLOY_SECRET }}" \
+            -w "\n=== HTTP_CODE: %{http_code} ===\n" \
+            "${{ secrets.APP_URL }}/_deploy/healthcheck")
+          echo "$RESPONSE"
+          if echo "$RESPONSE" | grep -q "\"ok\":true"; then
+            echo "✓ Healthcheck OK (Anthropic + Telegram + DB)"
+          else
+            echo "::warning::Healthcheck KO — voir reponse ci-dessus, un service externe est down."
+          fi

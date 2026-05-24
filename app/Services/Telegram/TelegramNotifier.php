@@ -67,6 +67,20 @@ class TelegramNotifier
     }
 
     /**
+     * Envoie un message d'alerte texte simple a l'admin (pas de keyboard).
+     * Utilise par les protections monitoring (healthcheck, brief-check,
+     * job failed callback). Retourne true si envoye, false si echec.
+     */
+    public function sendAdminAlert(string $message): bool
+    {
+        if (! $this->isReady()) {
+            return false;
+        }
+
+        return $this->sendMessage($message) !== null;
+    }
+
+    /**
      * Edite le texte d'un message deja envoye (utilise pour signaler
      * "✅ Publie" apres action). Si echec, log et continue.
      */

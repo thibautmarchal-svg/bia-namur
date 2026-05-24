@@ -253,6 +253,102 @@ Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
 
+// Endpoint healthcheck : verifie que les 3 dependances externes
+// critiques (Anthropic API, Telegram Bot API, DB) repondent.
+// Appele par le workflow deploy.yml apres extraction pour valider
+// que la nouvelle config est fonctionnelle. Si fail → workflow fail
+// et l'admin recoit aussi une alerte Telegram (si Telegram lui-meme
+// repond).
+Route::match(['get', 'post'], '/_deploy/healthcheck', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    $checks = [];
+    $hasFailure = false;
+
+    // 1. DB
+    try {
+        DB::connection()->getPdo();
+        DB::table('cities')->count();
+        $checks['database'] = ['ok' => true];
+    } catch (Throwable $e) {
+        $checks['database'] = ['ok' => false, 'error' => Str::limit($e->getMessage(), 200)];
+        $hasFailure = true;
+    }
+
+    // 2. Anthropic : appel minimal pour valider la cle (1 token environ)
+    try {
+        $apiKey = (string) config('services.anthropic.key');
+        if (empty($apiKey)) {
+            $checks['anthropic'] = ['ok' => false, 'error' => 'ANTHROPIC_API_KEY vide en config'];
+            $hasFailure = true;
+        } else {
+            $response = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'anthropic-version' => '2023-06-01',
+                'content-type' => 'application/json',
+            ])
+                ->timeout(15)
+                ->post('https://api.anthropic.com/v1/messages', [
+                    'model' => 'claude-haiku-4-5',
+                    'max_tokens' => 5,
+                    'messages' => [['role' => 'user', 'content' => 'ping']],
+                ]);
+            if ($response->successful()) {
+                $checks['anthropic'] = ['ok' => true, 'model' => $response->json('model')];
+            } else {
+                $checks['anthropic'] = [
+                    'ok' => false,
+                    'status' => $response->status(),
+                    'error' => Str::limit($response->body(), 200),
+                ];
+                $hasFailure = true;
+            }
+        }
+    } catch (Throwable $e) {
+        $checks['anthropic'] = ['ok' => false, 'error' => Str::limit($e->getMessage(), 200)];
+        $hasFailure = true;
+    }
+
+    // 3. Telegram : getMe (validation token + connectivite)
+    try {
+        $token = (string) config('services.telegram.bot_token');
+        if (empty($token) || ! config('services.telegram.enabled')) {
+            $checks['telegram'] = ['ok' => 'skipped', 'reason' => 'telegram disabled or no token'];
+        } else {
+            $response = Http::timeout(10)->get("https://api.telegram.org/bot{$token}/getMe");
+            if ($response->json('ok')) {
+                $checks['telegram'] = [
+                    'ok' => true,
+                    'bot_username' => $response->json('result.username'),
+                ];
+            } else {
+                $checks['telegram'] = ['ok' => false, 'error' => Str::limit($response->body(), 200)];
+                $hasFailure = true;
+            }
+        }
+    } catch (Throwable $e) {
+        $checks['telegram'] = ['ok' => false, 'error' => Str::limit($e->getMessage(), 200)];
+        $hasFailure = true;
+    }
+
+    // Si echec sur Anthropic/DB → notif Telegram immediate pour alerter l'admin
+    if ($hasFailure && ($checks['telegram']['ok'] ?? false) === true) {
+        $brokenServices = collect($checks)->filter(fn ($c) => ($c['ok'] ?? null) === false)->keys()->implode(', ');
+        app(TelegramNotifier::class)->sendAdminAlert(
+            "🚨 *Healthcheck Bia Namur a echoue*\n\nServices KO : *{$brokenServices}*\n\nVoir /_deploy/healthcheck pour le detail.",
+        );
+    }
+
+    return response()->json([
+        'ok' => ! $hasFailure,
+        'checks' => $checks,
+        'timestamp' => now()->toIso8601String(),
+    ], $hasFailure ? 500 : 200, [], JSON_PRETTY_PRINT);
+})->withoutMiddleware([ThrottleRequests::class]);
+
 // Endpoint diagnostic complet du pipeline brief hebdo. Retourne l'etat
 // de chaque maillon de la chaine vendredi 14h → notif Telegram :
 //   1. Scheduler : dernier appel scheduler a-t-il bien eu lieu ?

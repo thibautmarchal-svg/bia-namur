@@ -42,6 +42,18 @@ Schedule::call(function () {
     ->withoutOverlapping()
     ->onOneServer();
 
+// Safety net : vendredi 14h15 (15 min apres GenerateBriefJob) on verifie
+// qu'un brief existe bien pour la semaine en cours. Si non → alerte Telegram.
+// Garantit qu'un brief non genere (auth Anthropic fail, source RSS down,
+// queue bloquee) ne passe pas inapercu jusqu'au vendredi suivant.
+Schedule::command('bia:brief:check-weekly')
+    ->name('brief:check-weekly')
+    ->fridays()
+    ->at('14:15')
+    ->timezone('Europe/Brussels')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // Worker queue : execute les jobs en attente (SendBriefValidationNotifJob,
 // SendBriefPublishedNotificationJob, ModerateContributionJob, etc.).
 // --stop-when-empty : sort des qu'il n'y a plus rien en queue (sinon le

@@ -8,6 +8,7 @@ use App\Models\BriefItem;
 use App\Models\City;
 use App\Services\Ai\ClaudeApiService;
 use App\Services\Ingestion\NamurAgendaRssService;
+use App\Services\Telegram\TelegramNotifier;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,6 +17,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Genere le brief hebdo d'une ville pour une semaine ISO.
@@ -46,6 +49,55 @@ class GenerateBriefJob implements ShouldQueue
     public int $tries = 3;
 
     public array $backoff = [10, 60, 180];   // 10s, 1min, 3min
+
+    /**
+     * Callback declenche par la queue quand le job a definitivement
+     * echoue (apres epuisement des retries). Envoie une alerte Telegram
+     * immediate pour ne plus attendre vendredi suivant.
+     *
+     * Detecte le type d'erreur via le message pour donner un diagnostic
+     * actionable a l'admin (clé Anthropic, rate limit, source RSS, etc.).
+     */
+    public function failed(Throwable $exception): void
+    {
+        $message = $exception->getMessage();
+        $type = match (true) {
+            str_contains($message, 'Authentication') || str_contains($message, 'x-api-key') => 'ANTHROPIC_AUTH',
+            str_contains($message, 'rate_limit') || str_contains($message, '429') => 'RATE_LIMIT',
+            str_contains($message, 'overloaded') || str_contains($message, '529') => 'OVERLOADED',
+            str_contains($message, 'curl') || str_contains($message, 'timeout') => 'NETWORK',
+            default => 'UNKNOWN',
+        };
+
+        $hint = match ($type) {
+            'ANTHROPIC_AUTH' => 'Cle Anthropic invalide ou expiree. Met a jour ANTHROPIC_API_KEY dans GitHub Secrets puis redeploy.',
+            'RATE_LIMIT' => 'Trop d\'appels Anthropic. Verifie le quota sur console.anthropic.com.',
+            'OVERLOADED' => 'Anthropic surcharge cote serveur. Le job retentera plus tard (cron suivant).',
+            'NETWORK' => 'Probleme reseau (Anthropic ou serveur). Verifie la connexion sortante du serveur.',
+            default => 'Erreur inconnue. Voir failed_jobs pour le stacktrace complet.',
+        };
+
+        $alert = "🚨 *GenerateBriefJob a echoue*\n\n"
+            . "Semaine : *{$this->year}-W" . sprintf('%02d', $this->weekNumber) . "*\n"
+            . "Type : *{$type}*\n\n"
+            . 'Hint : _' . $hint . "_\n\n"
+            . "Erreur :\n`" . Str::limit($message, 300) . '`';
+
+        try {
+            app(TelegramNotifier::class)->sendAdminAlert($alert);
+        } catch (Throwable $e) {
+            Log::error('brief.failed_callback.telegram_error', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        Log::error('brief.generation.permanently_failed', [
+            'year' => $this->year,
+            'week' => $this->weekNumber,
+            'type' => $type,
+            'message' => $message,
+        ]);
+    }
 
     public function __construct(
         public readonly string $citySlug,
