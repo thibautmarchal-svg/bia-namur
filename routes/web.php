@@ -15,6 +15,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Middleware\RecordPageView;
+use App\Jobs\GenerateBriefJob;
 use App\Models\AiRun;
 use App\Models\Brief;
 use App\Services\Telegram\TelegramNotifier;
@@ -252,6 +253,50 @@ Route::match(['get', 'post'], '/_deploy/schedule', function () {
 Route::post('/webhooks/telegram/{secret}', TelegramWebhookController::class)
     ->name('webhooks.telegram')
     ->middleware('throttle:60,1');
+
+// Endpoint admin : force la generation d'un brief pour une semaine
+// donnee (utile pour rattraper un vendredi 14h rate, ex: cle Anthropic
+// revoquee). Execute le job en SYNC (pas via queue) pour reponse
+// immediate. La notif Telegram suivra via le BriefObserver + queue worker
+// (max 1 min apres). Status = draft_ai → l'admin doit valider via Telegram.
+//
+// Usage : GET /_deploy/regen-brief?secret=...&week=21&year=2026&city=namur
+//         (year + city sont optionnels, defaut = annee courante + namur)
+Route::match(['get', 'post'], '/_deploy/regen-brief', function () {
+    $secret = request()->input('secret');
+    if (! $secret || $secret !== config('bia.deploy.secret')) {
+        abort(404);
+    }
+
+    @set_time_limit(120);
+    @ini_set('memory_limit', '512M');
+
+    $now = now('Europe/Brussels');
+    $week = (int) request()->input('week', $now->isoWeek());
+    $year = (int) request()->input('year', $now->year);
+    $citySlug = (string) request()->input('city', 'namur');
+
+    try {
+        $job = new GenerateBriefJob($citySlug, $year, $week);
+        $brief = app()->call([$job, 'handle']);
+
+        return response()->json([
+            'ok' => true,
+            'brief_id' => $brief->id,
+            'slug' => $brief->slug,
+            'status' => $brief->status,
+            'items_count' => $brief->items()->count(),
+            'note' => 'Notif Telegram dispatch via observer → arrive sous 60s (next queue tick).',
+        ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'year_week' => "{$year}-W{$week}",
+            'error_class' => get_class($e),
+            'error' => $e->getMessage(),
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+})->withoutMiddleware([ThrottleRequests::class]);
 
 // Endpoint healthcheck : verifie que les 3 dependances externes
 // critiques (Anthropic API, Telegram Bot API, DB) repondent.
