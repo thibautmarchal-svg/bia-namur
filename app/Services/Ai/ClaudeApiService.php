@@ -3,10 +3,8 @@
 namespace App\Services\Ai;
 
 use Anthropic\Client;
-use Anthropic\Core\Exceptions\APIException;
-use Anthropic\Messages\Message;
-use Anthropic\Messages\TextBlock;
 use App\Models\AiRun;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -139,13 +137,17 @@ class ClaudeApiService
     }
 
     /**
-     * Appel reel a l'API Anthropic via le SDK.
+     * Appel reel a l'API Anthropic via HTTP raw (Laravel Http facade).
      *
-     * - retry/backoff geres par le SDK (config bia.ai.max_retries → maxRetries)
-     * - timeout configurable (bia.ai.timeout_seconds)
-     * - extraction du 1er TextBlock + tokens via Usage typee
-     * - les exceptions APIException montent telles quelles → le caller voit
-     *   le type precis (RateLimitException, AuthenticationException, etc.)
+     * Pourquoi pas le SDK officiel anthropic-ai/sdk ?
+     * → En prod le SDK genere systematiquement "x-api-key header is required"
+     *   (401) alors que la meme cle marche en HTTP raw (cf. healthcheck).
+     *   Bug subtil du SDK qu'on n'a pas reussi a reproduire en local. On
+     *   bypass donc le SDK et on utilise l'API Anthropic REST directement.
+     *
+     * - retry implemente a la main pour les 5xx et timeouts
+     *   (les 4xx auth/rate-limit ne se retrytent pas)
+     * - timeout = config('bia.ai.timeout_seconds', 60)
      */
     protected function callApi(array $prompt, string $userMessage, string $model): ClaudeCompletion
     {
@@ -153,57 +155,87 @@ class ClaudeApiService
             throw new RuntimeException('ANTHROPIC_API_KEY manquante. Active le mock_mode ou configure la cle.');
         }
 
-        $client = $this->client ?? new Client(apiKey: $this->apiKey);
+        $payload = [
+            'model' => $model,
+            'max_tokens' => (int) ($prompt['max_tokens'] ?? 2000),
+            'temperature' => (float) ($prompt['temperature'] ?? 0.5),
+            'system' => $prompt['system'],
+            'messages' => [
+                ['role' => 'user', 'content' => $userMessage],
+            ],
+        ];
 
-        try {
-            /** @var Message $message */
-            $message = $client->messages->create(
-                maxTokens: (int) ($prompt['max_tokens'] ?? 2000),
-                messages: [
-                    ['role' => 'user', 'content' => $userMessage],
-                ],
-                model: $model,
-                system: $prompt['system'],
-                temperature: (float) ($prompt['temperature'] ?? 0.5),
-                requestOptions: [
-                    'maxRetries' => (int) config('bia.ai.max_retries', 3),
-                    'timeout' => (int) config('bia.ai.timeout_seconds', 60),
-                ],
-            );
-        } catch (APIException $e) {
-            throw new RuntimeException(
-                'Anthropic API error: ' . $e->getMessage(),
-                $e->getCode(),
-                $e,
-            );
+        $maxRetries = (int) config('bia.ai.max_retries', 3);
+        $timeout = (int) config('bia.ai.timeout_seconds', 60);
+
+        $attempt = 0;
+        while (true) {
+            $attempt++;
+            try {
+                $response = Http::withHeaders([
+                    'x-api-key' => trim($this->apiKey),
+                    'anthropic-version' => '2023-06-01',
+                    'content-type' => 'application/json',
+                ])
+                    ->timeout($timeout)
+                    ->post('https://api.anthropic.com/v1/messages', $payload);
+            } catch (Throwable $e) {
+                // Erreur transport (timeout, DNS, etc.) — on retry si possible
+                if ($attempt < $maxRetries) {
+                    usleep(500_000 * (2 ** ($attempt - 1)));    // backoff 0.5s, 1s, 2s...
+
+                    continue;
+                }
+                throw new RuntimeException('Anthropic API transport error: ' . $e->getMessage(), 0, $e);
+            }
+
+            // 200 → succes
+            if ($response->successful()) {
+                return $this->parseResponse($response->json(), $model);
+            }
+
+            // 5xx → retry
+            if ($response->serverError() && $attempt < $maxRetries) {
+                usleep(500_000 * (2 ** ($attempt - 1)));
+
+                continue;
+            }
+
+            // 4xx (auth, rate-limit, bad request) → fail immediat avec message clair
+            throw new RuntimeException(sprintf(
+                'Anthropic API error: %d %s — %s',
+                $response->status(),
+                $response->reason(),
+                Str::limit($response->body(), 500),
+            ));
         }
-
-        $text = $this->extractText($message);
-
-        return new ClaudeCompletion(
-            text: $text,
-            model: (string) $message->model,
-            inputTokens: $message->usage->inputTokens,
-            outputTokens: $message->usage->outputTokens,
-            stopReason: (string) ($message->stopReason ?? 'unknown'),
-            isMock: false,
-        );
     }
 
     /**
-     * Extrait le texte du 1er TextBlock. Les autres types de blocs
-     * (tool_use, image, etc.) sont ignores ici — nos prompts produisent
-     * uniquement du texte.
+     * Parse la reponse JSON d'Anthropic en ClaudeCompletion.
      */
-    protected function extractText(Message $message): string
+    protected function parseResponse(array $body, string $model): ClaudeCompletion
     {
-        foreach ($message->content as $block) {
-            if ($block instanceof TextBlock) {
-                return $block->text;
+        $text = '';
+        foreach ($body['content'] ?? [] as $block) {
+            if (($block['type'] ?? null) === 'text') {
+                $text = (string) ($block['text'] ?? '');
+                break;
             }
         }
 
-        throw new RuntimeException('Aucun bloc TextBlock dans la reponse Anthropic.');
+        if ($text === '') {
+            throw new RuntimeException('Aucun bloc text dans la reponse Anthropic.');
+        }
+
+        return new ClaudeCompletion(
+            text: $text,
+            model: (string) ($body['model'] ?? $model),
+            inputTokens: (int) ($body['usage']['input_tokens'] ?? 0),
+            outputTokens: (int) ($body['usage']['output_tokens'] ?? 0),
+            stopReason: (string) ($body['stop_reason'] ?? 'unknown'),
+            isMock: false,
+        );
     }
 
     /**
