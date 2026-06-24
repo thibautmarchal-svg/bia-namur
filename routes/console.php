@@ -31,9 +31,13 @@ Artisan::command('inspire', function () {
 */
 
 // Brief hebdo Bia Namur — vendredi 14h00 Europe/Brussels
+// On genere pour la semaine SUIVANTE (N+1) : le brief « cette semaine a
+// Namur » doit etre pret et relu pendant le week-end pour etre live le
+// lundi matin, pile quand les gens planifient leur semaine. Generer pour
+// la semaine en cours (le vendredi) sortirait un brief deja perime aux 5/7.
 Schedule::call(function () {
-    $now = now('Europe/Brussels');
-    dispatch(new GenerateBriefJob('namur', $now->year, $now->isoWeek()));
+    $target = now('Europe/Brussels')->addWeek();
+    dispatch(new GenerateBriefJob('namur', $target->year, $target->isoWeek()));
 })
     ->name('brief:generate-weekly')
     ->fridays()

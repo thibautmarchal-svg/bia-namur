@@ -43,9 +43,12 @@ class CheckWeeklyBriefCommand extends Command
             return self::FAILURE;
         }
 
-        $now = now('Europe/Brussels');
-        $year = $now->year;
-        $week = $now->isoWeek();
+        // GenerateBriefJob tourne le vendredi pour la semaine SUIVANTE (N+1).
+        // Le safety-net doit donc verifier la meme cible, sinon il alerterait
+        // a tort (brief N+1 bien genere) ou raterait un vrai trou.
+        $target = now('Europe/Brussels')->addWeek();
+        $year = $target->year;
+        $week = $target->isoWeek();
         $expectedSlug = sprintf('%d-W%02d', $year, $week);
 
         $brief = Brief::query()
@@ -68,7 +71,7 @@ class CheckWeeklyBriefCommand extends Command
         $this->components->warn("Brief {$expectedSlug} ABSENT. Alerte Telegram envoyee.");
 
         $message = "⚠️ *Brief {$expectedSlug} introuvable*\n\n"
-            . "Pas de brief en draft_ai/pending_review/published pour la semaine en cours.\n\n"
+            . "Pas de brief en draft_ai/pending_review/published pour la semaine a venir.\n\n"
             . "Causes probables :\n"
             . "• Clé Anthropic invalide → check les ai_runs failed\n"
             . "• Queue worker bloqué → check failed_jobs\n"
