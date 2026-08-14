@@ -6,6 +6,7 @@ use App\Models\Brief;
 use App\Models\City;
 use App\Models\Place;
 use App\Models\Story;
+use Carbon\Carbon;
 use Illuminate\Http\Response;
 
 /**
@@ -40,21 +41,41 @@ class SitemapController extends Controller
         $base = rtrim(config('app.url'), '/');
         $urls = [];
 
+        // Signaux de fraicheur pour les pages d'index. Sans <lastmod>, Google
+        // n'a aucune raison de relire le sitemap et sa copie se perime (cf.
+        // GSC : sitemap lu une seule fois puis jamais rafraichi). On date donc
+        // chaque index sur son contenu le plus recent.
+        $lastBriefAt = Brief::query()
+            ->forCity($city)
+            ->published()
+            ->max('published_at');
+        $lastPlaceAt = Place::query()
+            ->forCity($city)
+            ->published()
+            ->max('updated_at');
+        $lastStoryAt = Story::query()
+            ->forCity($city)
+            ->published()
+            ->max('updated_at');
+
+        $iso = fn (?string $raw) => $raw ? Carbon::parse($raw)->toIso8601String() : null;
+        $homeAt = $iso(max($lastBriefAt, $lastPlaceAt, $lastStoryAt));
+
         // Pages editoriales statiques
         $static = [
-            ['/', 'daily', '1.0'],
-            ['/lieux', 'weekly', '0.9'],
-            ['/stories', 'weekly', '0.9'],
-            ['/briefs', 'weekly', '0.9'],
-            ['/carte', 'weekly', '0.7'],
-            ['/wallon', 'monthly', '0.6'],
-            ['/a-propos', 'yearly', '0.5'],
-            ['/contribuer', 'monthly', '0.5'],
+            ['/', 'daily', '1.0', $homeAt],
+            ['/lieux', 'weekly', '0.9', $iso($lastPlaceAt)],
+            ['/stories', 'weekly', '0.9', $iso($lastStoryAt)],
+            ['/briefs', 'weekly', '0.9', $iso($lastBriefAt)],
+            ['/carte', 'weekly', '0.7', $iso($lastPlaceAt)],
+            ['/wallon', 'monthly', '0.6', null],
+            ['/a-propos', 'yearly', '0.5', null],
+            ['/contribuer', 'monthly', '0.5', null],
         ];
-        foreach ($static as [$path, $changefreq, $priority]) {
+        foreach ($static as [$path, $changefreq, $priority, $lastmod]) {
             $urls[] = [
                 'loc' => $base . $path,
-                'lastmod' => null,
+                'lastmod' => $lastmod,
                 'changefreq' => $changefreq,
                 'priority' => $priority,
             ];

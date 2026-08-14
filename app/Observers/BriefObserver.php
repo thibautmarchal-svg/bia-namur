@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Jobs\SendBriefPublishedNotificationJob;
 use App\Jobs\SendBriefValidationNotifJob;
 use App\Models\Brief;
+use App\Support\CrawlPath;
 
 /**
  * Observer Brief.
@@ -36,6 +37,11 @@ class BriefObserver
         if (! $brief->wasChanged('status')) {
             return;
         }
+
+        // Le plan de liens crawlable (<noscript>) est cache 1h : on l'invalide
+        // des qu'un brief change de statut pour que Googlebot voie la nouvelle
+        // URL au premier crawl suivant la publication.
+        CrawlPath::forget();
 
         $original = $brief->getOriginal('status');
 

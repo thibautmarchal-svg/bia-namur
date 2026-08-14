@@ -67,6 +67,22 @@
 <body class="h-full bg-bia-cream text-bia-ink font-sans antialiased">
     @inertia
 
+    {{-- Plan de liens crawlable : l'app etant rendue cote client par Inertia,
+         le HTML servi ne contient aucun <a href>. Googlebot n'a alors aucun
+         chemin de decouverte immediat vers /brief/{slug} et consorts (il doit
+         attendre la file de rendu JS). Ce bloc <noscript> est ignore par les
+         navigateurs des utilisateurs et lu directement par les crawlers.
+         Cf. App\Support\CrawlPath (cache 1h). --}}
+    <noscript>
+        <nav aria-label="Plan du site">
+            <ul>
+                @foreach (\App\Support\CrawlPath::links() as $link)
+                    <li><a href="{{ $link['url'] }}">{{ $link['label'] }}</a></li>
+                @endforeach
+            </ul>
+        </nav>
+    </noscript>
+
     {{-- Cloudflare Web Analytics : cookieless, RGPD-friendly. Active uniquement
          si BIA_CLOUDFLARE_BEACON_TOKEN est defini en prod. --}}
     @if (app()->environment('production') && config('bia.analytics.cloudflare_beacon_token'))
