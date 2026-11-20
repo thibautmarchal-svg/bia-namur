@@ -92,7 +92,7 @@ trait SeedsDraftContent
     {
         $duplicates = collect($items)->pluck('slug')->duplicates();
         if ($duplicates->isNotEmpty()) {
-            throw new RuntimeException("Slug en double dans le lot ({$label}) : ".$duplicates->unique()->implode(', '));
+            throw new RuntimeException("Slug en double dans le lot ({$label}) : " . $duplicates->unique()->implode(', '));
         }
     }
 
