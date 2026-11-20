@@ -27,10 +27,7 @@ class PlacesLot02Seeder extends Seeder
                 'description' => 'Le marché hebdomadaire de Namur, installé depuis mars 2024 le long de la Sambre et du boulevard Frère Orban.',
                 'address' => 'Boulevard Frère Orban, 5000 Namur',
                 'neighborhood' => 'Bord de Sambre',
-                'opening_hours' => [
-                    'samedi' => 'Matin',
-                ],
-                'tags' => ['marché', 'samedi matin', 'Sambre', 'producteurs locaux'],
+                'tags' => ['marché', 'samedi', 'Sambre', 'centre'],
             ],
             [
                 'slug' => 'parc-louise-marie',

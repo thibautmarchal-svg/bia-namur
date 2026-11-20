@@ -10,9 +10,9 @@ use Illuminate\Database\Seeder;
  * Lot 1 — stories patrimoine (brouillons, à relire avant publication).
  * Sources : docs/contenu/lot-01-patrimoine-sources.md
  *
- * Seuls les faits recoupés par plusieurs sources figurent ici ; les points
- * divergents (accès intérieur du beffroi, date d'inauguration du théâtre,
- * longueur totale des galeries) sont volontairement laissés de côté.
+ * Les faits viennent des recherches consignées dans le fichier de sources
+ * (niveau de confiance noté pour chacun) ; les points contradictoires (accès
+ * intérieur du beffroi, longueur totale des galeries) sont laissés de côté.
  */
 class StoriesLot01Seeder extends Seeder
 {
@@ -24,13 +24,13 @@ class StoriesLot01Seeder extends Seeder
             [
                 'slug' => 'les-souterrains-de-la-citadelle',
                 'type' => Story::TYPE_PATRIMOINE,
-                'title' => 'Sous la Citadelle, la termitière de Napoléon',
+                'title' => 'Sous la Citadelle, la « termitière » de Napoléon',
                 'excerpt' => 'Sous la forteresse qui domine le confluent court un réseau de galeries dont on ne visite qu\'une infime partie. Napoléon l\'aurait qualifié de termitière.',
                 'place_slug' => 'citadelle-de-namur',
                 'content' => <<<'MD'
 Quand on monte à la Citadelle un dimanche de beau temps, on regarde le panorama, les pelouses, les familles qui pique-niquent. Rares sont ceux qui pensent à ce qui se passe *sous* leurs pieds. Pourtant, sous la forteresse qui veille sur le confluent de la Sambre et de la Meuse, tout un réseau de galeries a été creusé au fil des siècles pour défendre la ville.
 
-On raconte que Napoléon aurait qualifié la Citadelle de « termitière ». Qu'il l'ait dit ou non, l'image colle : des galeries creusées dans la colline, dont la longueur totale se compte en kilomètres. Les chiffres avancés varient d'ailleurs d'un document à l'autre, ce qui en dit long sur l'ampleur du labyrinthe.
+On raconte que Napoléon aurait qualifié la Citadelle de « termitière ». Qu'il l'ait dit ou non, l'image colle : des galeries creusées dans la colline, dont la longueur totale se compte en kilomètres.
 
 Aujourd'hui, seule une petite partie est ouverte au public : environ 500 mètres, que l'on parcourt en visite guidée d'une heure et demie. Depuis 2017, les galeries sont mises en scène avec du son, de la lumière, des effets 3D et des projections. C'est une manière de découvrir la Citadelle que le panorama du dessus ne laisse pas deviner.
 
@@ -46,13 +46,13 @@ MD,
                 'excerpt' => 'Construite vers 1388 pour défendre la ville, la tour Saint-Jacques est devenue beffroi en 1746 et figure aujourd\'hui au patrimoine mondial de l\'UNESCO.',
                 'place_slug' => 'beffroi-de-namur',
                 'content' => <<<'MD'
-Le beffroi de Namur n'a pas été construit pour sonner l'heure ni pour célébrer les libertés communales, comme tant de ses cousins flamands. À l'origine, c'est une tour de défense. Elle date des environs de 1388 et fait partie de l'enceinte médiévale de la ville : on l'appelait alors la tour Saint-Jacques, la plus haute des trois tours du rempart.
+Le beffroi de Namur n'a pas été construit pour sonner l'heure ni pour célébrer les libertés communales. À l'origine, c'est une tour de défense. Elle date des environs de 1388 et fait partie de l'enceinte médiévale de la ville : on l'appelait alors la tour Saint-Jacques, la plus haute des trois tours du rempart.
 
 Son destin de beffroi vient d'un accident de l'histoire. Lors du siège de 1745, l'église dont la tour servait de beffroi à la ville est détruite. Il faut un remplaçant. Les Namurois se tournent vers la tour Saint-Jacques, qui devient officiellement le beffroi de la ville en 1746. Une tour de guerre reconvertie en tour civique : une histoire bien de chez nous, pragmatique et sans chichi.
 
-Le XXe siècle ne l'a pas épargnée. Les bombardements américains de 1944 ont durement touché le centre de Namur, et le beffroi en a fait les frais. Elle est pourtant toujours là, au cœur du vieux quartier, à quelques pas de la place d'Armes.
+Le XXe siècle ne l'a pas épargnée. Elle a été fortement touchée par les bombardements américains de 1944. Elle est pourtant toujours là, au cœur du vieux quartier, à quelques pas de la place d'Armes.
 
-Le 1er décembre 1999, l'UNESCO a inscrit le beffroi de Namur, avec ceux de Belgique et de France, sur la liste du patrimoine mondial. Le classement réunit 56 beffrois.
+Le 1er décembre 1999, l'UNESCO a inscrit le beffroi de Namur sur la liste du patrimoine mondial, au sein de l'ensemble des beffrois.
 
 Pour la visiter, le plus simple est de l'admirer de l'extérieur, en flânant dans le centre. Si vous voulez savoir si l'intérieur se visite, renseignez-vous auprès de l'Office du tourisme, installé dans la Halle al'Chair.
 MD,
@@ -106,7 +106,7 @@ Le trésor est un ensemble d'orfèvrerie médiévale. Ses pièces sont l'œuvre 
 
 Le musée abrite aussi le plus vaste ensemble d'œuvres du peintre Henri Bles. Ses collections viennent de la Société archéologique de Namur, avec laquelle la Province entretient un partenariat de longue date. Avant d'arriver rue de Fer, elles ont séjourné à la Halle al'Chair, puis à l'hôtel de Groesbeeck-Croix.
 
-En 2024, une trentaine de pièces du trésor ont voyagé jusqu'à Paris, au musée de Cluny, pour l'exposition « Merveilleux Trésor d'Oignies », du 19 mars au 20 octobre. Un bel hommage rendu à un joyau qui appartient d'abord à Namur.
+En 2024, une trentaine de pièces du trésor ont voyagé jusqu'à Paris, au musée de Cluny, pour l'exposition « Merveilleux Trésor d'Oignies ». Un bel hommage rendu à un joyau qui appartient d'abord à Namur.
 
 Pour la visite, prenez votre temps devant les vitrines : c'est de l'orfèvrerie, qui se regarde de près. Horaires et tarifs sont à vérifier sur le site officiel du musée avant de venir.
 MD,
@@ -122,7 +122,7 @@ Dans le vieux quartier de Namur, rue Fumal, un ancien hôtel de maître abrite l
 
 Le musée appartient à la Province de Namur et a été créé en 1964. Son parcours suit la vie et l'œuvre de Rops, de ses débuts de caricaturiste à ses créations les plus sulfureuses. Rien d'étonnant à ce que l'on parle de lui comme d'un artiste qui ne laissait pas indifférent.
 
-Au fil du temps, les collections se sont enrichies grâce au soutien de la Fédération Wallonie-Bruxelles et de mécènes privés. En novembre 2025, une bonne nouvelle a été annoncée : 517 œuvres de la collection de Victor Arwas, venues de Londres, sont déposées à long terme au musée. Une belle façon de ramener un peu de Rops à la maison.
+Au fil du temps, les collections se sont enrichies grâce au soutien de la Fédération Wallonie-Bruxelles et de mécènes privés. En novembre 2025, une bonne nouvelle a été annoncée : 517 œuvres de la collection de Victor Arwas, venues de Londres, ont été annoncées en dépôt à long terme au musée. Une belle façon de ramener un peu de Rops à la maison.
 
 Le musée a aussi fermé deux mois au printemps 2023, du 6 mars au 15 mai, pour des travaux d'isolation.
 
@@ -138,7 +138,7 @@ MD,
                 'content' => <<<'MD'
 Pour traverser la Meuse à pied, à Namur, il y a plusieurs ponts. Mais un seul a porté une frontière : le pont de Jambes, aussi appelé pont de Meuse. C'est un vieux pont de maçonnerie de 145 mètres, qui relie Jambes au pied de la Citadelle, et il est classé au patrimoine de Wallonie depuis 1989.
 
-Une très ancienne tradition en fait remonter l'origine à l'époque romaine, mais rien ne le démontre : à prendre comme une légende locale. Ce qui est certain, c'est qu'il a été reconstruit en pierre calcaire pour mieux résister aux crues de la Meuse, et qu'il a connu de nombreuses transformations.
+Une très ancienne tradition en fait remonter l'origine à l'époque romaine, mais rien ne le démontre : à prendre comme une légende locale. Il a ensuite été reconstruit en pierre calcaire pour mieux résister aux crues de la Meuse, et qu'il a connu de nombreuses transformations.
 
 Son importance a longtemps été stratégique, militaire d'abord, mais aussi commerciale et administrative. D'une rive à l'autre, on passait du comté de Namur à la principauté de Liège. Sa tour marquait la limite entre les juridictions de Namur et de Jambes. Autrement dit, quand on le traverse aujourd'hui sans y penser, on franchit un ancien poste frontière.
 

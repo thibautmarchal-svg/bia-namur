@@ -34,3 +34,7 @@ La fiche en ligne annonce un marché « tous les samedis matin sur la place de l
 
 ## Pour la suite
 Les bonnes adresses de ce type (bistrots, boulangeries, terrasses) demandent une connaissance de terrain : une liste de tes adresses préférées, que je pourrais recouper avec des sources, améliorerait nettement le lot suivant.
+
+## Corrections après relecture indépendante (2026-11-20)
+- Horaire « Matin » du marché retiré (non confirmé) ; tag « producteurs locaux » retiré ; méta-commentaires de sources retirés des textes.
+- « À deux pas de la gare » et « rue calme » viennent de résumés de recherche, non d'une source primaire.

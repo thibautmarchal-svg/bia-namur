@@ -24,7 +24,7 @@ class PlacesLot01Seeder extends Seeder
                 'slug' => 'beffroi-de-namur',
                 'name' => 'Beffroi de Namur',
                 'type' => 'patrimoine',
-                'description' => 'L\'ancienne tour Saint-Jacques de l\'enceinte médiévale, devenue beffroi de la ville au XVIIIe siècle et inscrite à l\'UNESCO avec les beffrois de Belgique et de France.',
+                'description' => 'L\'ancienne tour Saint-Jacques de l\'enceinte médiévale, devenue beffroi de la ville au XVIIIe siècle et inscrite à l\'UNESCO.',
                 'latitude' => 50.463895,
                 'longitude' => 4.867072,
                 'address' => 'Rue du Beffroi, 5000 Namur',

@@ -30,7 +30,7 @@ Son histoire est celle d'une reconversion. Le parc a été aménagé en 1879-188
 
 On y trouve des allées et un étang aux formes courbes, de larges pelouses, des grottes artificielles et un pont hollandais, vestige des fortifications de 1815-1820. Autrement dit, le décor du XIXe siècle se mêle à des traces beaucoup plus anciennes de la défense de la ville.
 
-Le nom rend hommage à Louise-Marie d'Orléans, première reine des Belges et épouse de Léopold Ier. Certaines sources l'écrivent « Marie-Louise » : si vous voyez les deux orthographes, c'est du même parc qu'on parle.
+Le nom rend hommage à Louise-Marie d'Orléans, première reine des Belges et épouse de Léopold Ier.
 
 C'est un endroit simple, qui ne demande pas de programme : une promenade entre deux trains, ou un tour d'étang avant de rejoindre le centre. Une adresse qui n'a rien à prouver, et qui résume assez bien l'esprit de ces lieux qu'on aime à Namur sans en faire des attractions.
 MD,
@@ -46,7 +46,7 @@ Pendant longtemps, aller au marché à Namur, c'était descendre dans le centre 
 
 Ce déménagement a fait parler. Installer un marché sur un nouvel emplacement n'a rien d'une formalité : la presse locale a parlé d'un Tetris à ciel ouvert pour décrire le casse-tête de l'organisation. Quant aux commerçants du centre-ville, ils se sont retrouvés partagés sur les retombées : moins de monde dans certaines rues, comme la rue de Fer, le samedi matin.
 
-Les repères ont changé aussi pour ceux qui cherchent des informations. Certaines pages anciennes, notamment des guides pour étudiants ou chercheurs, situent encore le marché alimentaire sur la place du Palais de Justice : elles ne sont plus à jour. Si vous préparez votre venue, mieux vaut vérifier l'emplacement sur le site de l'Office du tourisme, qui publie les dates des éditions du marché du bord de l'eau, le samedi.
+Les repères ont changé aussi pour ceux qui cherchent des informations en ligne. Si vous préparez votre venue, mieux vaut vérifier l'emplacement sur le site de l'Office du tourisme, qui publie les dates des éditions du marché du bord de l'eau, le samedi.
 
 Le décor, lui, a de quoi plaire : un marché installé au bord de l'eau, en plein cœur de la ville. Pour en profiter, venez le samedi matin avec un sac : on achète toujours plus qu'on ne l'avait prévu.
 MD,
@@ -55,7 +55,7 @@ MD,
                 'slug' => 'les-librairies-independantes-de-namur',
                 'type' => Story::TYPE_PLACE,
                 'title' => 'Trois librairies indépendantes du centre de Namur',
-                'excerpt' => 'Tulitu, MaBaLiYo et Ad Hoc : trois adresses du centre pour qui préfère un libraire à un algorithme, entre romans, santé mentale et bande dessinée.',
+                'excerpt' => 'Tulitu, MaBaLiYo et Ad Hoc : trois adresses du centre pour qui préfère un libraire à un algorithme, entre santé mentale et bande dessinée.',
                 'place_slug' => null,
                 'content' => <<<'MD'
 Namur ne manque pas de librairies, et le centre-ville en compte plusieurs où l'on prend le temps de fouiner. En voici trois, très différentes, pour qui préfère les conseils d'un libraire à ceux d'un algorithme.

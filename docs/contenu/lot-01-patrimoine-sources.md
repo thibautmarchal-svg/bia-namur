@@ -50,3 +50,9 @@ Wikipédia (API, 2026-11-20) pour beffroi, Saint-Loup, Rops, TreM.a, pont de Jam
 
 ## Pour la relecture
 Points de fait à vérifier en priorité : le « Baudelaire » de Saint-Loup (formulation exacte), la date d'inauguration UNESCO, et les 517 œuvres Arwas. Constat annexe : la fiche existante `cathedrale-saint-aubain` a des coordonnées (50.4651, 4.8642) qui diffèrent de Wikipédia (50.4646, 4.8599).
+
+## Corrections après relecture indépendante (2026-11-20)
+- UNESCO : le texte dit seulement « inscrit le 1er décembre 1999 au sein de l'ensemble des beffrois » ; l'ensemble de 56 beffrois Belgique + France semble dater d'une extension ultérieure (à vérifier) → chiffre et pays retirés.
+- Cluny 2024 : les dates précises (19 mars–20 octobre) étaient incohérentes avec l'article DH de février 2024 → retirées ; reste « en 2024, une trentaine de pièces ».
+- Rops : le dépôt Arwas est dit « annoncé ».
+- Plusieurs détails (usages successifs de la Halle al'Chair, « plus vaste ensemble » Bles, partenariat avec la Société archéologique, pont « de Meuse », etc.) viennent des résumés de recherche et **ne sont pas confirmés par une source primaire** : à relire avec attention.

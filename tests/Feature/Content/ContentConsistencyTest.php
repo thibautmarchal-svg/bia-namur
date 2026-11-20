@@ -135,6 +135,40 @@ it('throws on an unknown place_slug instead of creating an orphan story', functi
     expect(Story::where('slug', 'story-de-test')->exists())->toBeFalse();
 });
 
+it('does not attach a draft story to an already published place', function () {
+    $seeder = contentSeeder();
+    $seeder->places([samplePlace()]);
+    Place::where('slug', 'lieu-de-test')->update(['status' => Place::STATUS_PUBLISHED]);
+
+    $seeder->stories([sampleStory(['place_slug' => 'lieu-de-test'])]);
+
+    expect(Place::where('slug', 'lieu-de-test')->firstOrFail()->story_id)->toBeNull();
+});
+
+it('throws on duplicate slugs inside one batch', function () {
+    expect(fn () => contentSeeder()->places([samplePlace(), samplePlace()]))->toThrow(RuntimeException::class);
+    expect(fn () => contentSeeder()->stories([sampleStory(), sampleStory()]))->toThrow(RuntimeException::class);
+});
+
+it('rolls back the whole story batch when one story fails', function () {
+    expect(fn () => contentSeeder()->stories([
+        sampleStory(['slug' => 'story-ok']),
+        sampleStory(['slug' => 'story-ko', 'place_slug' => 'nexiste-pas']),
+    ]))->toThrow(RuntimeException::class);
+
+    expect(Story::where('slug', 'story-ok')->exists())->toBeFalse();
+});
+
+it('does not crash on re-seed when a place was soft-deleted', function () {
+    $seeder = contentSeeder();
+    $seeder->places([samplePlace()]);
+    Place::where('slug', 'lieu-de-test')->firstOrFail()->delete();
+
+    $seeder->places([samplePlace()]);
+
+    expect(Place::withTrashed()->where('slug', 'lieu-de-test')->count())->toBe(1);
+});
+
 describe('real content', function () {
     beforeEach(function () {
         $this->seed(PlaceSeeder::class);
@@ -192,5 +226,17 @@ describe('real content', function () {
             expect(str_word_count(strip_tags($story->content), 0, 'àâäéèêëîïôöùûüçÀÉÈ'))
                 ->toBeBetween(200, 400, $story->slug);
         }
+    });
+    it('has no source-commentary left in publishable text', function () {
+        $banned = ['les sources', 'certaines sources', 'pages anciennes', "d'un document à l'autre", "je n'ai pas pu"];
+        foreach (Story::whereNotIn('slug', FOUNDING_STORY_SLUGS)->get() as $story) {
+            foreach ($banned as $phrase) {
+                expect(str_contains(mb_strtolower($story->content), $phrase))->toBeFalse("{$story->slug}: « {$phrase} »");
+            }
+        }
+    });
+
+    it('has no unconfirmed opening hours on new places', function () {
+        expect(Place::whereNotIn('slug', FOUNDING_PLACE_SLUGS)->whereNotNull('opening_hours')->count())->toBe(0);
     });
 });

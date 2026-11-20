@@ -14,10 +14,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             PlaceSeeder::class,
             StorySeeder::class,
-            PlacesLot01Seeder::class,
-            StoriesLot01Seeder::class,
-            PlacesLot02Seeder::class,
-            StoriesLot02Seeder::class,
+            ContentLotsSeeder::class,
         ]);
     }
 }
