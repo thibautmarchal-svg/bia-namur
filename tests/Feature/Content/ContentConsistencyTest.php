@@ -161,8 +161,9 @@ describe('real content', function () {
     });
 
     it('keeps coordinates in the Namur area', function () {
-        foreach (Place::all() as $place) {
-            expect((float) $place->latitude)->toBeBetween(50.3, 50.6, $place->slug)
+        foreach (Place::whereNotNull('latitude')->get() as $place) {
+            expect($place->longitude)->not->toBeNull($place->slug)
+                ->and((float) $place->latitude)->toBeBetween(50.3, 50.6, $place->slug)
                 ->and((float) $place->longitude)->toBeBetween(4.6, 5.1, $place->slug);
         }
     });
