@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
             StorySeeder::class,
             PlacesLot01Seeder::class,
             StoriesLot01Seeder::class,
+            PlacesLot02Seeder::class,
+            StoriesLot02Seeder::class,
         ]);
     }
 }
